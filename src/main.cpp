@@ -159,16 +159,24 @@ pedestrian_light_state_t  *pl_state )
 }
 */
 
+struct LightTimings {
+  static constexpr uint32_t RED_DURATION = 8;
+  static constexpr uint32_t RED_YELLOW_DURATION = 2;
+  static constexpr uint32_t GREEN_DURATION = 10;
+  static constexpr uint32_t YELLOW_DURATION = 2;
+  static constexpr uint32_t WALK_DURATION = 5;
+};
+
+enum ActionState { RED_DONT_WALK, RED_WALK, RED_YELLOW, GREEN, YELLOW };
+ActionState state = RED_DONT_WALK;
+ActionState next_state = RED_DONT_WALK;
+
 /**
  * Main function for traffic light state machine
  * @param timeout_expired true when the last timeout started with @ref
  * start_timeout() has expired
  * @param button_pressed true when the user has pressed the button
  */
-
-enum ActionState { RED_DONT_WALK, RED_WALK, RED_YELLOW, GREEN, YELLOW };
-ActionState state = RED_DONT_WALK;
-ActionState next_state = RED_DONT_WALK;
 
 void process_traffic_light(bool timeout_expired, bool button_pressed) {
 
@@ -184,38 +192,43 @@ void process_traffic_light(bool timeout_expired, bool button_pressed) {
   if (timeout_expired) {
 
     if (state == RED_DONT_WALK) {
-      std::cout << "Trafic light:Red, wait 8 seconds" << std::endl;
+      std::cout << "Trafic light:Red, wait " << LightTimings::RED_DURATION
+                << std::endl;
       if (pedestrian_request == true) {
 
-        start_timeout(0);
+        start_timeout(1);
         next_state = RED_WALK;
 
       } else {
-        start_timeout(8);
+        start_timeout(LightTimings::RED_DURATION);
         next_state = RED_YELLOW;
         std::cout << "Pedestrian Light: Dont Walk" << std::endl;
       }
     } else if (state == RED_WALK) {
-      std::cout << "Pedestrian Light: Walk for 5 seconds" << std::endl;
-      start_timeout(5);
+      std::cout << "Pedestrian Light: Walk for " << LightTimings::WALK_DURATION
+                << std::endl;
+      start_timeout(LightTimings::WALK_DURATION);
       pedestrian_request = false;
       next_state = RED_YELLOW;
     } else if (state == RED_YELLOW) {
-      std::cout << "Trafic light:Red Yellow, wait 2 seconds" << std::endl;
+      std::cout << "Trafic light:Red Yellow, wait "
+                << LightTimings::RED_YELLOW_DURATION << " secodns" << std::endl;
       std::cout << "Pedestrian Light: Dont Walk" << std::endl;
-      start_timeout(2);
+      start_timeout(LightTimings::RED_YELLOW_DURATION);
       next_state = GREEN;
 
     } else if (state == GREEN) {
-      std::cout << "Trafic light:Green, wait 10 seconds" << std::endl;
+      std::cout << "Trafic light:Green, wait " << LightTimings::GREEN_DURATION
+                << " secodns" << std::endl;
       std::cout << "Pedestrian Light: Dont Walk" << std::endl;
-      start_timeout(10);
+      start_timeout(LightTimings::GREEN_DURATION);
       next_state = YELLOW;
 
     } else if (state == YELLOW) {
-      std::cout << "Trafic light: Yellow, wait 2 seconds" << std::endl;
+      std::cout << "Trafic light: Yellow, wait "
+                << LightTimings::YELLOW_DURATION << " secodns" << std::endl;
       std::cout << "Pedestrian Light: Dont Walk" << std::endl;
-      start_timeout(2);
+      start_timeout(LightTimings::YELLOW_DURATION);
       next_state = RED_DONT_WALK;
     }
   }
