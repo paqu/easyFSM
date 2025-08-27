@@ -134,30 +134,6 @@ void *worker(void *arg) {
   std::cout << "End worker" << std::endl;
   return nullptr;
 }
-/*
-typedef enum Trafic_Light_State {
-    RED,
-    RED_YELLOW,
-    GREEN,
-    YELLOW
-} trafic_light_state_t;
-
-trafic_light_state_t trafic_light_state = RED;
-trafic_light_state_t next_trafic_light_state = RED;
-
-typedef enum Pedestrian_Light_State {
-    WALK_GREEN,
-    DONT_WALK_RED
-} pedestrian_light_state_t;
-pedestrian_light_state_t pedestrian_light_state = DONT_WALK_RED;
-
-void handle_button_pressed(trafic_light_state_t *tl_state,
-pedestrian_light_state_t  *pl_state )
-{
-
-    std::cout << "handled button press" << std::endl;
-}
-*/
 
 struct LightTimings {
   static constexpr uint32_t RED_DURATION = 8;
