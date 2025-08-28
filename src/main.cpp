@@ -141,68 +141,94 @@ struct LightTimings {
     static constexpr uint32_t WALK_DURATION = 5;
 };
 
-enum ActionState { RED_DONT_WALK, RED_WALK, RED_YELLOW, GREEN, YELLOW };
-ActionState state = RED_DONT_WALK;
-ActionState next_state = RED_DONT_WALK;
+class TrafficLightController {
+  public:
+    struct StateInfo {
+        const char *traffic_light_status;
+        const char *pedestrian_status;
+        uint32_t duration;
+    };
 
-// Structure to hold state information for display
-struct StateInfo {
-    const char *traffic_light_status;
-    const char *pedestrian_status;
-    int duration;
+    enum ActionState { RED_DONT_WALK, RED_WALK, RED_YELLOW, GREEN, YELLOW };
+
+    TrafficLightController()
+        : state(RED_DONT_WALK), next_state(RED_DONT_WALK),
+          pedestrian_request(false) {}
+
+    void button_pressed() {
+        std::cout << "Pedestrian button pressed!" << std::endl;
+        pedestrian_request = true;
+    }
+
+    void timeout_expired() {
+
+        state = next_state;
+        next_state = get_next_state(state);
+
+        // Clear request after granting walk signal
+        if (state == RED_WALK)
+            pedestrian_request = false;
+
+        StateInfo info = get_state_info(state);
+        print_state_info(info);
+
+        // Start next timeout
+        start_timeout(info.duration);
+    }
+
+  private:
+    ActionState state;
+    ActionState next_state;
+    bool pedestrian_request;
+
+    StateInfo get_state_info(ActionState s) const {
+        switch (s) {
+        case RED_DONT_WALK:
+            return {"Red", "Don't Walk",
+                    pedestrian_request ? 1 : LightTimings::RED_DURATION};
+        case RED_WALK:
+            return {"Red", "Walk", LightTimings::WALK_DURATION};
+        case RED_YELLOW:
+            return {"Red Yellow", "Don't Walk",
+                    LightTimings::RED_YELLOW_DURATION};
+        case GREEN:
+            return {"Green", "Don't Walk", LightTimings::GREEN_DURATION};
+        case YELLOW:
+            return {"Yellow", "Don't Walk", LightTimings::YELLOW_DURATION};
+        default:
+            return {"Unknown", "Unknown", 0};
+        }
+    }
+
+    ActionState get_next_state(ActionState s) const {
+        switch (s) {
+        case RED_DONT_WALK:
+            return pedestrian_request ? RED_WALK : RED_YELLOW;
+        case RED_WALK:
+            return RED_YELLOW;
+        case RED_YELLOW:
+            return GREEN;
+        case GREEN:
+            return YELLOW;
+        case YELLOW:
+            return RED_DONT_WALK;
+        default:
+            return RED_DONT_WALK;
+        }
+    }
+
+    void print_state_info(const StateInfo &info) const {
+        std::cout << "Traffic light: " << info.traffic_light_status
+                  << ", duration: " << info.duration
+                  << "s, Pedestrian: " << info.pedestrian_status << std::endl;
+    }
+
+    void start_timeout(uint32_t duration) const {
+        ::start_timeout(duration); // Calls your existing timeout thread
+    }
 };
 
-// Function to get display information for current state
-StateInfo get_state_info(ActionState current_state, bool pedestrian_request) {
-    switch (current_state) {
-    case RED_DONT_WALK:
-        if (pedestrian_request) {
-            return {"Red", "Don't Walk",
-                    1}; // Short duration before walk signal
-        } else {
-            return {"Red", "Don't Walk", LightTimings::RED_DURATION};
-        }
-    case RED_WALK:
-        return {"Red", "Walk", LightTimings::WALK_DURATION};
-    case RED_YELLOW:
-        return {"Red Yellow", "Don't Walk", LightTimings::RED_YELLOW_DURATION};
-    case GREEN:
-        return {"Green", "Don't Walk", LightTimings::GREEN_DURATION};
-    case YELLOW:
-        return {"Yellow", "Don't Walk", LightTimings::YELLOW_DURATION};
-    default:
-        return {"Unknown", "Unknown", 0};
-    }
-}
-
-// Function to handle state transitions
-ActionState get_next_state(ActionState current_state, bool pedestrian_request) {
-    switch (current_state) {
-    case RED_DONT_WALK:
-        return pedestrian_request ? RED_WALK : RED_YELLOW;
-    case RED_WALK:
-        return RED_YELLOW;
-    case RED_YELLOW:
-        return GREEN;
-    case GREEN:
-        return YELLOW;
-    case YELLOW:
-        return RED_DONT_WALK;
-    default:
-        return RED_DONT_WALK;
-    }
-}
-
-void print_state_info(const StateInfo &info, bool button_just_pressed = false) {
-    if (button_just_pressed) {
-        std::cout << "Pedestrian button pressed!" << std::endl;
-    }
-
-    std::cout << "Traffic light: " << info.traffic_light_status << ", wait "
-              << info.duration << " seconds" << std::endl;
-    std::cout << "Pedestrian Light: " << info.pedestrian_status << std::endl;
-}
-
+TrafficLightController controller;
 /**
  * Main function for traffic light state machine
  * @param timeout_expired true when the last timeout started with @ref
@@ -210,40 +236,11 @@ void print_state_info(const StateInfo &info, bool button_just_pressed = false) {
  * @param button_pressed true when the user has pressed the button
  */
 void process_traffic_light(bool timeout_expired, bool button_pressed) {
-    static bool pedestrian_request = false;
-    bool button_just_pressed = false;
 
-    // Handle button press
-    if (button_pressed) {
-        pedestrian_request = true;
-        button_just_pressed = true;
-    }
-
-    // Update current state
-    state = next_state;
-
-    // Handle timeout and state transitions
-    if (timeout_expired) {
-        // Get state information for display
-        StateInfo info = get_state_info(state, pedestrian_request);
-
-        // Print current state
-        print_state_info(info, button_just_pressed);
-
-        // Calculate next state
-        next_state = get_next_state(state, pedestrian_request);
-
-        // Clear pedestrian request after granting walk signal
-        if (state == RED_WALK) {
-            pedestrian_request = false;
-        }
-
-        // Start timeout for current state
-        start_timeout(info.duration);
-    } else if (button_just_pressed) {
-        // Print button press notification even if timeout hasn't expired
-        std::cout << "Pedestrian button pressed!" << std::endl;
-    }
+    if (button_pressed)
+        controller.button_pressed();
+    if (timeout_expired)
+        controller.timeout_expired();
 }
 
 int main() {
