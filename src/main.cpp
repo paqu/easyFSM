@@ -1,5 +1,3 @@
-
-
 #include <stdint.h>
 
 #include <iostream>
@@ -147,66 +145,104 @@ enum ActionState { RED_DONT_WALK, RED_WALK, RED_YELLOW, GREEN, YELLOW };
 ActionState state = RED_DONT_WALK;
 ActionState next_state = RED_DONT_WALK;
 
+// Structure to hold state information for display
+struct StateInfo {
+  const char *traffic_light_status;
+  const char *pedestrian_status;
+  int duration;
+};
+
+// Function to get display information for current state
+StateInfo get_state_info(ActionState current_state, bool pedestrian_request) {
+  switch (current_state) {
+  case RED_DONT_WALK:
+    if (pedestrian_request) {
+      return {"Red", "Don't Walk",
+          1}; // Short duration before walk signal
+    } else {
+      return {"Red", "Don't Walk", LightTimings::RED_DURATION};
+    }
+  case RED_WALK:
+    return {"Red", "Walk", LightTimings::WALK_DURATION};
+  case RED_YELLOW:
+    return {"Red Yellow", "Don't Walk", LightTimings::RED_YELLOW_DURATION};
+  case GREEN:
+    return {"Green", "Don't Walk", LightTimings::GREEN_DURATION};
+  case YELLOW:
+    return {"Yellow", "Don't Walk", LightTimings::YELLOW_DURATION};
+  default:
+    return {"Unknown", "Unknown", 0};
+  }
+}
+
+// Function to handle state transitions
+ActionState get_next_state(ActionState current_state, bool pedestrian_request) {
+  switch (current_state) {
+  case RED_DONT_WALK:
+    return pedestrian_request ? RED_WALK : RED_YELLOW;
+  case RED_WALK:
+    return RED_YELLOW;
+  case RED_YELLOW:
+    return GREEN;
+  case GREEN:
+    return YELLOW;
+  case YELLOW:
+    return RED_DONT_WALK;
+  default:
+    return RED_DONT_WALK;
+  }
+}
+
+void print_state_info(const StateInfo &info, bool button_just_pressed = false) {
+  if (button_just_pressed) {
+    std::cout << "Pedestrian button pressed!" << std::endl;
+  }
+
+  std::cout << "Traffic light: " << info.traffic_light_status << ", wait "
+        << info.duration << " seconds" << std::endl;
+  std::cout << "Pedestrian Light: " << info.pedestrian_status << std::endl;
+}
+
 /**
  * Main function for traffic light state machine
  * @param timeout_expired true when the last timeout started with @ref
  * start_timeout() has expired
  * @param button_pressed true when the user has pressed the button
  */
-
 void process_traffic_light(bool timeout_expired, bool button_pressed) {
-
   static bool pedestrian_request = false;
+  bool button_just_pressed = false;
 
+  // Handle button press
   if (button_pressed) {
-    std::cout << "Pedestrian button pressed!" << std::endl;
     pedestrian_request = true;
+    button_just_pressed = true;
   }
 
+  // Update current state
   state = next_state;
 
+  // Handle timeout and state transitions
   if (timeout_expired) {
+    // Get state information for display
+    StateInfo info = get_state_info(state, pedestrian_request);
 
-    if (state == RED_DONT_WALK) {
-      std::cout << "Trafic light:Red, wait " << LightTimings::RED_DURATION
-                << std::endl;
-      if (pedestrian_request == true) {
+    // Print current state
+    print_state_info(info, button_just_pressed);
 
-        start_timeout(1);
-        next_state = RED_WALK;
+    // Calculate next state
+    next_state = get_next_state(state, pedestrian_request);
 
-      } else {
-        start_timeout(LightTimings::RED_DURATION);
-        next_state = RED_YELLOW;
-        std::cout << "Pedestrian Light: Dont Walk" << std::endl;
-      }
-    } else if (state == RED_WALK) {
-      std::cout << "Pedestrian Light: Walk for " << LightTimings::WALK_DURATION
-                << std::endl;
-      start_timeout(LightTimings::WALK_DURATION);
+    // Clear pedestrian request after granting walk signal
+    if (state == RED_WALK) {
       pedestrian_request = false;
-      next_state = RED_YELLOW;
-    } else if (state == RED_YELLOW) {
-      std::cout << "Trafic light:Red Yellow, wait "
-                << LightTimings::RED_YELLOW_DURATION << " secodns" << std::endl;
-      std::cout << "Pedestrian Light: Dont Walk" << std::endl;
-      start_timeout(LightTimings::RED_YELLOW_DURATION);
-      next_state = GREEN;
-
-    } else if (state == GREEN) {
-      std::cout << "Trafic light:Green, wait " << LightTimings::GREEN_DURATION
-                << " secodns" << std::endl;
-      std::cout << "Pedestrian Light: Dont Walk" << std::endl;
-      start_timeout(LightTimings::GREEN_DURATION);
-      next_state = YELLOW;
-
-    } else if (state == YELLOW) {
-      std::cout << "Trafic light: Yellow, wait "
-                << LightTimings::YELLOW_DURATION << " secodns" << std::endl;
-      std::cout << "Pedestrian Light: Dont Walk" << std::endl;
-      start_timeout(LightTimings::YELLOW_DURATION);
-      next_state = RED_DONT_WALK;
     }
+
+    // Start timeout for current state
+    start_timeout(info.duration);
+  } else if (button_just_pressed) {
+    // Print button press notification even if timeout hasn't expired
+    std::cout << "Pedestrian button pressed!" << std::endl;
   }
 }
 
