@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 #include <iostream>
+#include <map>
 
 #include <pthread.h>
 #include <unistd.h>
@@ -139,92 +140,151 @@ struct LightTimings {
     static constexpr uint32_t GREEN_DURATION = 10;
     static constexpr uint32_t YELLOW_DURATION = 2;
     static constexpr uint32_t WALK_DURATION = 5;
+    static constexpr uint32_t WALK_PREP_DURATION = 1;
+    static constexpr uint32_t WALK_FINISH_DURATION = 2;
+};
+
+struct TrafficLights {
+    bool red;
+    bool yellow;
+    bool green;
+};
+struct PedestrianLights {
+    bool red;
+    bool green;
+};
+
+struct StateContext {
+    std::string name;
+    uint32_t duration;
+    TrafficLights carLights;
+    PedestrianLights pedLights;
 };
 
 class TrafficLightController {
   public:
-    struct StateInfo {
-        const char *traffic_light_status;
-        const char *pedestrian_status;
-        uint32_t duration;
+    enum State {
+        CAR_GREEN,
+        CAR_YELLOW,
+        CAR_RED,
+        WALK_PREP,
+        WALK,
+        WALK_FINISH,
+        CAR_RED_YELLOW
     };
 
-    enum ActionState { RED_DONT_WALK, RED_WALK, RED_YELLOW, GREEN, YELLOW };
-
     TrafficLightController()
-        : state(RED_DONT_WALK), next_state(RED_DONT_WALK),
-          pedestrian_request(false) {}
+        : current_state(CAR_RED), pedestrian_request(false) {
+        // Initialize all states
+        states[CAR_GREEN] = {
+            "CAR_GREEN",
+            LightTimings::GREEN_DURATION,
+            {false, false, true},
+            {true, false},
+        };
+        states[CAR_YELLOW] = {
+            "CAR_YELLOW",
+            LightTimings::YELLOW_DURATION,
+            {false, true, false},
+            {true, false},
+        };
+        states[CAR_RED] = {
+            "CAR_RED",
+            LightTimings::RED_DURATION,
+            {true, false, false},
+            {true, false},
+        };
+        states[WALK_PREP] = {
+            "WALK_PREP",
+            LightTimings::WALK_PREP_DURATION,
+            {true, false, false},
+            {true, false},
+        };
+        states[WALK] = {
+            "WALK",
+            LightTimings::WALK_DURATION,
+            {true, false, false},
+            {false, true},
+        };
+        states[WALK_FINISH] = {
+            "WALK_FINISH",
+            LightTimings::WALK_FINISH_DURATION,
+            {true, false, false},
+            {true, false},
+        };
+        states[CAR_RED_YELLOW] = {
+            "CAR_RED_YELLOW",
+            LightTimings::RED_YELLOW_DURATION,
+            {true, true, false},
+            {true, false},
+        };
+    }
 
     void button_pressed() {
-        std::cout << "Pedestrian button pressed!" << std::endl;
-        pedestrian_request = true;
+        if (pedestrian_request != true) {
+            pedestrian_request = true;
+            std::cout << "Button Pressed" << std ::endl;
+        } else {
+            std::cout << "Request is processed." << std::endl;
+        }
     }
 
     void timeout_expired() {
+        // Determine next state
+        current_state = get_next_state(current_state, pedestrian_request);
+        // Copy current state info into context
+        StateContext context = states[current_state];
 
-        state = next_state;
-        next_state = get_next_state(state);
+        // Call print function
+        print_state_info(context);
 
-        // Clear request after granting walk signal
-        if (state == RED_WALK)
+        if (current_state == WALK_FINISH) {
             pedestrian_request = false;
+        }
 
-        StateInfo info = get_state_info(state);
-        print_state_info(info);
-
-        // Start next timeout
-        start_timeout(info.duration);
+        // Start timeout for next state
+        start_timeout(states[current_state].duration);
     }
 
   private:
-    ActionState state;
-    ActionState next_state;
+    State current_state;
     bool pedestrian_request;
+    std::map<State, StateContext> states;
 
-    StateInfo get_state_info(ActionState s) const {
+    State get_next_state(State s, bool ped_request) const {
         switch (s) {
-        case RED_DONT_WALK:
-            return {"Red", "Don't Walk",
-                    pedestrian_request ? 1 : LightTimings::RED_DURATION};
-        case RED_WALK:
-            return {"Red", "Walk", LightTimings::WALK_DURATION};
-        case RED_YELLOW:
-            return {"Red Yellow", "Don't Walk",
-                    LightTimings::RED_YELLOW_DURATION};
-        case GREEN:
-            return {"Green", "Don't Walk", LightTimings::GREEN_DURATION};
-        case YELLOW:
-            return {"Yellow", "Don't Walk", LightTimings::YELLOW_DURATION};
+        case CAR_GREEN:
+            return CAR_YELLOW;
+        case CAR_YELLOW:
+            return ped_request ? WALK_PREP : CAR_RED;
+        case CAR_RED:
+            return CAR_RED_YELLOW;
+        case WALK_PREP:
+            return WALK;
+        case WALK:
+            return WALK_FINISH;
+        case WALK_FINISH:
+            return CAR_RED_YELLOW;
+        case CAR_RED_YELLOW:
+            return CAR_GREEN;
         default:
-            return {"Unknown", "Unknown", 0};
+            return CAR_GREEN;
         }
     }
 
-    ActionState get_next_state(ActionState s) const {
-        switch (s) {
-        case RED_DONT_WALK:
-            return pedestrian_request ? RED_WALK : RED_YELLOW;
-        case RED_WALK:
-            return RED_YELLOW;
-        case RED_YELLOW:
-            return GREEN;
-        case GREEN:
-            return YELLOW;
-        case YELLOW:
-            return RED_DONT_WALK;
-        default:
-            return RED_DONT_WALK;
-        }
-    }
-
-    void print_state_info(const StateInfo &info) const {
-        std::cout << "Traffic light: " << info.traffic_light_status
-                  << ", duration: " << info.duration
-                  << "s, Pedestrian: " << info.pedestrian_status << std::endl;
+    void print_state_info(const StateContext &ctx) const {
+        std::cout << "------------------------ \n"
+                  << "State: " << ctx.name << "\n"
+                  << "Duration: " << ctx.duration << "s\n"
+                  << "Car Lights: [R:" << ctx.carLights.red
+                  << ", Y:" << ctx.carLights.yellow
+                  << ", G:" << ctx.carLights.green << "]\n"
+                  << "Pedestrian Lights: [R:" << ctx.pedLights.red
+                  << ", G:" << ctx.pedLights.green << "]\n\n";
     }
 
     void start_timeout(uint32_t duration) const {
-        ::start_timeout(duration); // Calls your existing timeout thread
+        ::start_timeout(duration); // your external timeout function
     }
 };
 
