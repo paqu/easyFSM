@@ -1,7 +1,7 @@
 # Makefile for Traffic Light Simulator
 # Kompilator i flagi
 CXX = g++
-CXXFLAGS = -Wall -Wextra -std=c++11 -pthread -g -O2
+CXXFLAGS = -Wall -Wextra -std=c++14 -pthread -g -O2
 LDFLAGS = -pthread
 
 # Katalogi
