@@ -161,6 +161,39 @@ struct StateContext {
     PedestrianLights pedLights;
 };
 
+class IDisplayService {
+  public:
+    virtual ~IDisplayService() = default;
+    virtual void showState(const StateContext &ctx) = 0;
+    virtual void showButtonState(bool waiting_to_be_processed) = 0;
+};
+
+class ConsoleDisplayService : public IDisplayService {
+  public:
+    void showState(const StateContext &ctx) override {
+        std::cout << "\n------------------------ \n"
+                  << "Traffic Light State:\n"
+                  << "------------------------ \n";
+
+        std::cout << "State: " << ctx.name << "\n"
+                  << "Duration: " << ctx.duration << "s\n"
+                  << "Car Lights: [R:" << ctx.carLights.red
+                  << ", Y:" << ctx.carLights.yellow
+                  << ", G:" << ctx.carLights.green << "]\n"
+                  << "Pedestrian Lights: [R:" << ctx.pedLights.red
+                  << ", G:" << ctx.pedLights.green << "]\n";
+
+        std::cout << std::endl;
+    }
+    void showButtonState(bool waiting_to_be_processed) override {
+        if (waiting_to_be_processed == false) {
+            std::cout << "Button Pressed" << std ::endl;
+        } else {
+            std::cout << "Request is waiting to be processed." << std::endl;
+        }
+    }
+};
+
 class TrafficLightController {
   public:
     enum State {
@@ -173,8 +206,10 @@ class TrafficLightController {
         CAR_RED_YELLOW
     };
 
-    TrafficLightController()
-        : current_state(CAR_RED), pedestrian_request(false) {
+    TrafficLightController(std::unique_ptr<IDisplayService> ds)
+        : current_state(CAR_RED), pedestrian_request(false),
+          displayService(std::move(ds)) {
+
         // Initialize all states
         states[CAR_GREEN] = {
             "CAR_GREEN",
@@ -221,11 +256,13 @@ class TrafficLightController {
     }
 
     void button_pressed() {
+        bool waiting_to_be_processed = false;
         if (pedestrian_request != true) {
             pedestrian_request = true;
-            std::cout << "Button Pressed" << std ::endl;
+            displayService->showButtonState(waiting_to_be_processed);
         } else {
-            std::cout << "Request is processed." << std::endl;
+            waiting_to_be_processed = true;
+            displayService->showButtonState(waiting_to_be_processed);
         }
     }
 
@@ -235,8 +272,7 @@ class TrafficLightController {
         // Copy current state info into context
         StateContext context = states[current_state];
 
-        // Call print function
-        print_state_info(context);
+        displayService->showState(context);
 
         if (current_state == WALK_FINISH) {
             pedestrian_request = false;
@@ -250,6 +286,7 @@ class TrafficLightController {
     State current_state;
     bool pedestrian_request;
     std::map<State, StateContext> states;
+    std::unique_ptr<IDisplayService> displayService;
 
     State get_next_state(State s, bool ped_request) const {
         switch (s) {
@@ -272,38 +309,30 @@ class TrafficLightController {
         }
     }
 
-    void print_state_info(const StateContext &ctx) const {
-        std::cout << "------------------------ \n"
-                  << "State: " << ctx.name << "\n"
-                  << "Duration: " << ctx.duration << "s\n"
-                  << "Car Lights: [R:" << ctx.carLights.red
-                  << ", Y:" << ctx.carLights.yellow
-                  << ", G:" << ctx.carLights.green << "]\n"
-                  << "Pedestrian Lights: [R:" << ctx.pedLights.red
-                  << ", G:" << ctx.pedLights.green << "]\n\n";
-    }
-
     void start_timeout(uint32_t duration) const {
         ::start_timeout(duration); // your external timeout function
     }
 };
 
-TrafficLightController controller;
 /**
  * Main function for traffic light state machine
  * @param timeout_expired true when the last timeout started with @ref
  * start_timeout() has expired
  * @param button_pressed true when the user has pressed the button
  */
+std::unique_ptr<TrafficLightController> controller;
 void process_traffic_light(bool timeout_expired, bool button_pressed) {
 
     if (button_pressed)
-        controller.button_pressed();
+        controller->button_pressed();
     if (timeout_expired)
-        controller.timeout_expired();
+        controller->timeout_expired();
 }
 
 int main() {
+    controller = std::make_unique<TrafficLightController>(
+        std::make_unique<ConsoleDisplayService>());
+
     pthread_t reader_thread, worker_thread, timeout_thread;
 
     pthread_mutex_init(&worker_mutex, nullptr);
