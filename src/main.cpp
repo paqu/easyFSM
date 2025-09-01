@@ -194,6 +194,32 @@ class ConsoleDisplayService : public IDisplayService {
     }
 };
 
+class ITimerService {
+  public:
+    virtual ~ITimerService() = default;
+    virtual void start_timeout(uint32_t duration_sec) = 0;
+};
+
+// Timer service that takes function in constructor
+class FunctionTimerService : public ITimerService {
+  private:
+    std::function<void(uint32_t)> timer_function;
+
+  public:
+    // Constructor that accepts any callable (function pointer, lambda,
+    // std::function)
+    explicit FunctionTimerService(std::function<void(uint32_t)> func)
+        : timer_function(std::move(func)) {}
+
+    // Convenience constructor for function pointers
+    explicit FunctionTimerService(void (*func)(uint32_t))
+        : timer_function(func) {}
+
+    void start_timeout(uint32_t duration_sec) override {
+        timer_function(duration_sec);
+    }
+};
+
 class TrafficLightController {
   public:
     enum State {
@@ -206,9 +232,10 @@ class TrafficLightController {
         CAR_RED_YELLOW
     };
 
-    TrafficLightController(std::unique_ptr<IDisplayService> ds)
+    TrafficLightController(std::unique_ptr<IDisplayService> ds,
+                           std::unique_ptr<ITimerService> ts)
         : current_state(CAR_RED), pedestrian_request(false),
-          displayService(std::move(ds)) {
+          displayService(std::move(ds)), timerService(std::move(ts)) {
 
         // Initialize all states
         states[CAR_GREEN] = {
@@ -287,6 +314,7 @@ class TrafficLightController {
     bool pedestrian_request;
     std::map<State, StateContext> states;
     std::unique_ptr<IDisplayService> displayService;
+    std::unique_ptr<ITimerService> timerService;
 
     State get_next_state(State s, bool ped_request) const {
         switch (s) {
@@ -310,7 +338,7 @@ class TrafficLightController {
     }
 
     void start_timeout(uint32_t duration) const {
-        ::start_timeout(duration); // your external timeout function
+        timerService->start_timeout(duration);
     }
 };
 
@@ -331,7 +359,8 @@ void process_traffic_light(bool timeout_expired, bool button_pressed) {
 
 int main() {
     controller = std::make_unique<TrafficLightController>(
-        std::make_unique<ConsoleDisplayService>());
+        std::make_unique<ConsoleDisplayService>(),
+        std::make_unique<FunctionTimerService>(start_timeout));
 
     pthread_t reader_thread, worker_thread, timeout_thread;
 
