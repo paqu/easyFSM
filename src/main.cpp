@@ -6,6 +6,9 @@
 #include <pthread.h>
 #include <unistd.h>
 
+#include "services.h"
+#include "traffic_light_controller.h"
+
 char shared_char;
 bool char_available = false;
 bool timeout_expired = false;
@@ -103,7 +106,6 @@ void *timeout_generator(void *arg) {
  * @brief Main worker thread
  * Receives the chars from the console and timeouts using @ref worker_convar
  * conditional variable
- * TODO: implement traffic light functionality here.
  * @param arg
  * @return void*
  */
@@ -133,214 +135,6 @@ void *worker(void *arg) {
     std::cout << "End worker" << std::endl;
     return nullptr;
 }
-
-struct LightTimings {
-    static constexpr uint32_t RED_DURATION = 8;
-    static constexpr uint32_t RED_YELLOW_DURATION = 2;
-    static constexpr uint32_t GREEN_DURATION = 10;
-    static constexpr uint32_t YELLOW_DURATION = 2;
-    static constexpr uint32_t WALK_DURATION = 5;
-    static constexpr uint32_t WALK_PREP_DURATION = 1;
-    static constexpr uint32_t WALK_FINISH_DURATION = 2;
-};
-
-struct TrafficLights {
-    bool red;
-    bool yellow;
-    bool green;
-};
-struct PedestrianLights {
-    bool red;
-    bool green;
-};
-
-struct StateContext {
-    std::string name;
-    uint32_t duration;
-    TrafficLights carLights;
-    PedestrianLights pedLights;
-};
-
-class IDisplayService {
-  public:
-    virtual ~IDisplayService() = default;
-    virtual void showState(const StateContext &ctx) = 0;
-    virtual void showButtonState(bool waiting_to_be_processed) = 0;
-};
-
-class ConsoleDisplayService : public IDisplayService {
-  public:
-    void showState(const StateContext &ctx) override {
-        std::cout << "\n------------------------ \n"
-                  << "Traffic Light State:\n"
-                  << "------------------------ \n";
-
-        std::cout << "State: " << ctx.name << "\n"
-                  << "Duration: " << ctx.duration << "s\n"
-                  << "Car Lights: [R:" << ctx.carLights.red
-                  << ", Y:" << ctx.carLights.yellow
-                  << ", G:" << ctx.carLights.green << "]\n"
-                  << "Pedestrian Lights: [R:" << ctx.pedLights.red
-                  << ", G:" << ctx.pedLights.green << "]\n";
-
-        std::cout << std::endl;
-    }
-    void showButtonState(bool waiting_to_be_processed) override {
-        if (waiting_to_be_processed == false) {
-            std::cout << "Button Pressed" << std ::endl;
-        } else {
-            std::cout << "Request is waiting to be processed." << std::endl;
-        }
-    }
-};
-
-class ITimerService {
-  public:
-    virtual ~ITimerService() = default;
-    virtual void start_timeout(uint32_t duration_sec) = 0;
-};
-
-// Timer service that takes function in constructor
-class FunctionTimerService : public ITimerService {
-  private:
-    std::function<void(uint32_t)> timer_function;
-
-  public:
-    // Constructor that accepts any callable (function pointer, lambda,
-    // std::function)
-    explicit FunctionTimerService(std::function<void(uint32_t)> func)
-        : timer_function(std::move(func)) {}
-
-    // Convenience constructor for function pointers
-    explicit FunctionTimerService(void (*func)(uint32_t))
-        : timer_function(func) {}
-
-    void start_timeout(uint32_t duration_sec) override {
-        timer_function(duration_sec);
-    }
-};
-
-class TrafficLightController {
-  public:
-    enum State {
-        CAR_GREEN,
-        CAR_YELLOW,
-        CAR_RED,
-        WALK_PREP,
-        WALK,
-        WALK_FINISH,
-        CAR_RED_YELLOW
-    };
-
-    TrafficLightController(std::unique_ptr<IDisplayService> ds,
-                           std::unique_ptr<ITimerService> ts)
-        : current_state(CAR_RED), pedestrian_request(false),
-          displayService(std::move(ds)), timerService(std::move(ts)) {
-
-        // Initialize all states
-        states[CAR_GREEN] = {
-            "CAR_GREEN",
-            LightTimings::GREEN_DURATION,
-            {false, false, true},
-            {true, false},
-        };
-        states[CAR_YELLOW] = {
-            "CAR_YELLOW",
-            LightTimings::YELLOW_DURATION,
-            {false, true, false},
-            {true, false},
-        };
-        states[CAR_RED] = {
-            "CAR_RED",
-            LightTimings::RED_DURATION,
-            {true, false, false},
-            {true, false},
-        };
-        states[WALK_PREP] = {
-            "WALK_PREP",
-            LightTimings::WALK_PREP_DURATION,
-            {true, false, false},
-            {true, false},
-        };
-        states[WALK] = {
-            "WALK",
-            LightTimings::WALK_DURATION,
-            {true, false, false},
-            {false, true},
-        };
-        states[WALK_FINISH] = {
-            "WALK_FINISH",
-            LightTimings::WALK_FINISH_DURATION,
-            {true, false, false},
-            {true, false},
-        };
-        states[CAR_RED_YELLOW] = {
-            "CAR_RED_YELLOW",
-            LightTimings::RED_YELLOW_DURATION,
-            {true, true, false},
-            {true, false},
-        };
-    }
-
-    void button_pressed() {
-        bool waiting_to_be_processed = false;
-        if (pedestrian_request != true) {
-            pedestrian_request = true;
-            displayService->showButtonState(waiting_to_be_processed);
-        } else {
-            waiting_to_be_processed = true;
-            displayService->showButtonState(waiting_to_be_processed);
-        }
-    }
-
-    void timeout_expired() {
-        // Determine next state
-        current_state = get_next_state(current_state, pedestrian_request);
-        // Copy current state info into context
-        StateContext context = states[current_state];
-
-        displayService->showState(context);
-
-        if (current_state == WALK_FINISH) {
-            pedestrian_request = false;
-        }
-
-        // Start timeout for next state
-        start_timeout(states[current_state].duration);
-    }
-
-  private:
-    State current_state;
-    bool pedestrian_request;
-    std::map<State, StateContext> states;
-    std::unique_ptr<IDisplayService> displayService;
-    std::unique_ptr<ITimerService> timerService;
-
-    State get_next_state(State s, bool ped_request) const {
-        switch (s) {
-        case CAR_GREEN:
-            return CAR_YELLOW;
-        case CAR_YELLOW:
-            return ped_request ? WALK_PREP : CAR_RED;
-        case CAR_RED:
-            return CAR_RED_YELLOW;
-        case WALK_PREP:
-            return WALK;
-        case WALK:
-            return WALK_FINISH;
-        case WALK_FINISH:
-            return CAR_RED_YELLOW;
-        case CAR_RED_YELLOW:
-            return CAR_GREEN;
-        default:
-            return CAR_GREEN;
-        }
-    }
-
-    void start_timeout(uint32_t duration) const {
-        timerService->start_timeout(duration);
-    }
-};
 
 /**
  * Main function for traffic light state machine
