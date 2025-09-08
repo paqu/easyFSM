@@ -3,6 +3,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <set>
 #include <stdint.h>
 #include <string>
 
@@ -47,6 +48,133 @@ class ITimerService {
     virtual void start_timeout(uint32_t duration_sec) = 0;
 };
 
+enum class TrafficState {
+    CAR_GREEN,
+    CAR_YELLOW,
+    CAR_RED,
+    WALK_PREP,
+    WALK,
+    WALK_FINISH,
+    CAR_RED_YELLOW
+};
+
+enum class SystemEvent { TIME_EXPIRED, BUTTON_PRESSED };
+
+class StateTransition {
+  public:
+    virtual ~StateTransition() = default;
+    virtual TrafficState get_from_state() const = 0;
+    virtual SystemEvent get_trigger_event() const = 0;
+    virtual TrafficState get_to_state() const = 0;
+    virtual bool can_transition(TrafficState current_state,
+                                SystemEvent event) const = 0;
+};
+
+class StateMachine {
+  public:
+    virtual ~StateMachine() = default;
+    virtual TrafficState get_current_state() const = 0;
+    virtual bool process_event(SystemEvent event) = 0;
+    virtual TrafficState get_next_state(TrafficState current_state,
+                                        SystemEvent event) const = 0;
+    virtual void
+    add_transition(std::unique_ptr<StateTransition> transition) = 0;
+    virtual void set_state(TrafficState state) = 0;
+    virtual std::vector<TrafficState> get_all_states() const = 0;
+    virtual std::vector<SystemEvent> get_all_events() const = 0;
+};
+
+class SimpleStateTransition : public StateTransition {
+  private:
+    TrafficState from_state;
+    SystemEvent trigger_event;
+    TrafficState to_state;
+
+  public:
+    SimpleStateTransition(TrafficState from_state, SystemEvent trigger_event,
+                          TrafficState to_state)
+        : from_state(from_state), trigger_event(trigger_event),
+          to_state(to_state) {}
+
+    TrafficState get_from_state() const override;
+    SystemEvent get_trigger_event() const override;
+    TrafficState get_to_state() const override;
+
+    bool can_transition(TrafficState current_state,
+                        SystemEvent event) const override;
+};
+// ========== STATE MACHINE IMPLEMENTATION ==========
+
+class RuntimeStateMachine : public StateMachine {
+  private:
+    TrafficState current_state;
+    std::vector<std::unique_ptr<StateTransition>> transitions;
+    std::set<TrafficState> states;
+    std::set<SystemEvent> events;
+
+  public:
+    explicit RuntimeStateMachine(TrafficState initial_state);
+
+    TrafficState get_current_state() const override;
+
+    void set_state(TrafficState state) override;
+
+    void add_transition(std::unique_ptr<StateTransition> transition) override;
+
+    TrafficState get_next_state(TrafficState current_state,
+                                SystemEvent event) const override;
+
+    bool process_event(SystemEvent event) override;
+
+    std::vector<TrafficState> get_all_states() const override;
+
+    std::vector<SystemEvent> get_all_events() const override;
+};
+
+// ========== TRAFFIC LIGHT ACTION HANDLER ==========
+
+class TrafficLightTransition : public StateTransition {
+  private:
+    TrafficState from_state;
+    SystemEvent trigger_event;
+    TrafficState to_state_normal;
+    TrafficState to_state_with_pedestrian;
+    std::function<bool()> has_pedestrian_request;
+    bool check_pedestrian_request;
+
+  public:
+    // Simple transition constructor
+    TrafficLightTransition(TrafficState from, SystemEvent event,
+                           TrafficState to)
+        : from_state(from), trigger_event(event), to_state_normal(to),
+          to_state_with_pedestrian(to), check_pedestrian_request(false) {}
+
+    // Conditional transition constructor
+    TrafficLightTransition(TrafficState from, SystemEvent event,
+                           TrafficState to_normal, TrafficState to_pedestrian,
+                           std::function<bool()> ped_check)
+        : from_state(from), trigger_event(event), to_state_normal(to_normal),
+          to_state_with_pedestrian(to_pedestrian),
+          has_pedestrian_request(ped_check), check_pedestrian_request(true) {}
+
+    TrafficState get_from_state() const override { return from_state; }
+    SystemEvent get_trigger_event() const override { return trigger_event; }
+
+    TrafficState get_to_state() const override {
+        if (check_pedestrian_request && has_pedestrian_request &&
+            has_pedestrian_request()) {
+            return to_state_with_pedestrian;
+        }
+        return to_state_normal;
+    }
+
+    bool can_transition(TrafficState current_state,
+                        SystemEvent event) const override {
+        return this->from_state == current_state &&
+               this->trigger_event == event;
+    }
+};
+
 class TrafficLightController {
   public:
     enum State {
@@ -59,11 +187,13 @@ class TrafficLightController {
         CAR_RED_YELLOW
     };
 
-    TrafficLightController(std::unique_ptr<IDisplayService> ds,
+    TrafficLightController(std::shared_ptr<StateMachine> state_machine,
+                           std::unique_ptr<IDisplayService> ds,
                            std::unique_ptr<ITimerService> ts);
 
     void button_pressed();
     void timeout_expired();
+    bool has_pedestrian_request() const;
 
   private:
     State current_state;
