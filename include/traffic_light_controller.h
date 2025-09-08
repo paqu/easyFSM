@@ -60,6 +60,12 @@ enum class TrafficState {
 
 enum class SystemEvent { TIME_EXPIRED, BUTTON_PRESSED };
 
+class EnumUtils {
+  public:
+    static std::string state_to_string(TrafficState state);
+    static std::string event_to_string(SystemEvent event);
+};
+
 class StateTransition {
   public:
     virtual ~StateTransition() = default;
@@ -177,16 +183,6 @@ class TrafficLightTransition : public StateTransition {
 
 class TrafficLightController {
   public:
-    enum State {
-        CAR_GREEN,
-        CAR_YELLOW,
-        CAR_RED,
-        WALK_PREP,
-        WALK,
-        WALK_FINISH,
-        CAR_RED_YELLOW
-    };
-
     TrafficLightController(std::shared_ptr<StateMachine> state_machine,
                            std::unique_ptr<IDisplayService> ds,
                            std::unique_ptr<ITimerService> ts);
@@ -194,14 +190,19 @@ class TrafficLightController {
     void button_pressed();
     void timeout_expired();
     bool has_pedestrian_request() const;
+    void handle_event(SystemEvent event);
+
+    void handle_timeout();
+    void handle_button_press();
+    void handle(TrafficState current_state, SystemEvent event,
+                TrafficState next_state);
 
   private:
-    State current_state;
     bool pedestrian_request;
-    std::map<State, StateContext> states;
+    std::map<TrafficState, StateContext> states;
     std::unique_ptr<IDisplayService> displayService;
     std::unique_ptr<ITimerService> timerService;
+    std::shared_ptr<StateMachine> state_machine;
 
-    State get_next_state(State s, bool ped_request) const;
     void start_timeout(uint32_t duration) const;
 };

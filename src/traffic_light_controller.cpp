@@ -1,4 +1,14 @@
 #include "traffic_light_controller.h"
+#include <iostream>
+
+// Stream operators for easy printing
+std::ostream &operator<<(std::ostream &os, TrafficState state) {
+    return os << EnumUtils::state_to_string(state);
+}
+
+std::ostream &operator<<(std::ostream &os, SystemEvent event) {
+    return os << EnumUtils::event_to_string(event);
+}
 
 TrafficState SimpleStateTransition::get_from_state() const {
     return from_state;
@@ -68,108 +78,150 @@ std::vector<SystemEvent> RuntimeStateMachine::get_all_events() const {
 }
 
 TrafficLightController::TrafficLightController(
-    std::shared_ptr<StateMachine> state_machine,
-    std::unique_ptr<IDisplayService> ds, std::unique_ptr<ITimerService> ts)
-    : current_state(CAR_RED), pedestrian_request(false),
-      displayService(std::move(ds)), timerService(std::move(ts)) {
+    std::shared_ptr<StateMachine> sm, std::unique_ptr<IDisplayService> ds,
+    std::unique_ptr<ITimerService> ts)
+    : pedestrian_request(false), displayService(std::move(ds)),
+      timerService(std::move(ts)), state_machine(sm) {
 
     // Initialize all states
-    states[CAR_GREEN] = {
+    states[TrafficState::CAR_GREEN] = {
         "CAR_GREEN",
         LightTimings::GREEN_DURATION,
         {false, false, true},
         {true, false},
     };
-    states[CAR_YELLOW] = {
+    states[TrafficState::CAR_YELLOW] = {
         "CAR_YELLOW",
         LightTimings::YELLOW_DURATION,
         {false, true, false},
         {true, false},
     };
-    states[CAR_RED] = {
+    states[TrafficState::CAR_RED] = {
         "CAR_RED",
         LightTimings::RED_DURATION,
         {true, false, false},
         {true, false},
     };
-    states[WALK_PREP] = {
+    states[TrafficState::WALK_PREP] = {
         "WALK_PREP",
         LightTimings::WALK_PREP_DURATION,
         {true, false, false},
         {true, false},
     };
-    states[WALK] = {
+    states[TrafficState::WALK] = {
         "WALK",
         LightTimings::WALK_DURATION,
         {true, false, false},
         {false, true},
     };
-    states[WALK_FINISH] = {
+    states[TrafficState::WALK_FINISH] = {
         "WALK_FINISH",
         LightTimings::WALK_FINISH_DURATION,
         {true, false, false},
         {true, false},
     };
-    states[CAR_RED_YELLOW] = {
+    states[TrafficState::CAR_RED_YELLOW] = {
         "CAR_RED_YELLOW",
         LightTimings::RED_YELLOW_DURATION,
         {true, true, false},
         {true, false},
     };
 }
-
-void TrafficLightController::button_pressed() {
-    bool waiting_to_be_processed = false;
-    if (pedestrian_request != true) {
-        pedestrian_request = true;
-        displayService->showButtonState(waiting_to_be_processed);
-    } else {
-        waiting_to_be_processed = true;
-        displayService->showButtonState(waiting_to_be_processed);
-    }
+void TrafficLightController::handle_button_press() {
+    handle_event(SystemEvent::BUTTON_PRESSED);
 }
 
-void TrafficLightController::timeout_expired() {
-    // Determine next state
-    current_state = get_next_state(current_state, pedestrian_request);
-    // Copy current state info into context
-    StateContext context = states[current_state];
+void TrafficLightController::handle_timeout() {
+    handle_event(SystemEvent::TIME_EXPIRED);
+}
+void TrafficLightController::handle(TrafficState _current_state,
+                                    SystemEvent _event,
+                                    TrafficState _next_state) {
+
+    auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
+                   std::chrono::system_clock::now().time_since_epoch())
+                   .count();
+
+    if (_event == SystemEvent::BUTTON_PRESSED) {
+        bool waiting_to_be_processed = false;
+        if (pedestrian_request != true) {
+            pedestrian_request = true;
+            displayService->showButtonState(waiting_to_be_processed);
+        } else {
+            waiting_to_be_processed = true;
+            displayService->showButtonState(waiting_to_be_processed);
+        }
+        return;
+    } else if (_event == SystemEvent::TIME_EXPIRED &&
+               _next_state == TrafficState::WALK_FINISH) {
+        std::cout << "Clearing pedestrian request after walk phase"
+                  << std::endl;
+        pedestrian_request = false;
+    }
+    std::cout << "\n[" << now << "] Transition: " << _current_state << " --["
+              << _event << "]--> " << _next_state << std::endl;
+
+    StateContext context = states[_next_state];
 
     displayService->showState(context);
 
-    if (current_state == WALK_FINISH) {
-        pedestrian_request = false;
-    }
-
     // Start timeout for next state
-    start_timeout(states[current_state].duration);
+    start_timeout(states[_next_state].duration);
 }
+
+void TrafficLightController::button_pressed() { handle_button_press(); }
+
+void TrafficLightController::timeout_expired() { handle_timeout(); }
+
 bool TrafficLightController::has_pedestrian_request() const {
     return pedestrian_request;
 }
 
-TrafficLightController::State
-TrafficLightController::get_next_state(State s, bool ped_request) const {
-    switch (s) {
-    case CAR_GREEN:
-        return CAR_YELLOW;
-    case CAR_YELLOW:
-        return ped_request ? WALK_PREP : CAR_RED;
-    case CAR_RED:
-        return CAR_RED_YELLOW;
-    case WALK_PREP:
-        return WALK;
-    case WALK:
-        return WALK_FINISH;
-    case WALK_FINISH:
-        return CAR_RED_YELLOW;
-    case CAR_RED_YELLOW:
-        return CAR_GREEN;
-    default:
-        return CAR_GREEN;
+void TrafficLightController::handle_event(SystemEvent event) {
+    TrafficState new_state = state_machine->get_current_state();
+    TrafficState current_state = state_machine->get_current_state();
+
+    bool ret = state_machine->process_event(event);
+
+    if (ret) { // true means that event rised state change
+        new_state = state_machine->get_current_state();
     }
+
+    handle(current_state, event, new_state);
 }
 
 void TrafficLightController::start_timeout(uint32_t duration) const {
     timerService->start_timeout(duration);
+}
+
+std::string EnumUtils::state_to_string(TrafficState state) {
+    switch (state) {
+    case TrafficState::CAR_GREEN:
+        return "CAR_GREEN";
+    case TrafficState::CAR_YELLOW:
+        return "CAR_YELLOW";
+    case TrafficState::CAR_RED:
+        return "CAR_RED";
+    case TrafficState::WALK_PREP:
+        return "WALK_PREP";
+    case TrafficState::WALK:
+        return "WALK";
+    case TrafficState::WALK_FINISH:
+        return "WALK_FINISH";
+    case TrafficState::CAR_RED_YELLOW:
+        return "CAR_RED_YELLOW";
+    default:
+        return "UNKNOWN_STATE";
+    }
+}
+
+std::string EnumUtils::event_to_string(SystemEvent event) {
+    switch (event) {
+    case SystemEvent::TIME_EXPIRED:
+        return "TIME_EXPIRED";
+    case SystemEvent::BUTTON_PRESSED:
+        return "BUTTON_PRESSED";
+    default:
+        return "UNKNOWN_EVENT";
+    }
 }

@@ -150,10 +150,11 @@ void process_traffic_light(bool timeout_expired, bool button_pressed) {
     if (timeout_expired)
         controller->timeout_expired();
 }
-
+std::shared_ptr<RuntimeStateMachine> state_machine;
 int main() {
-    auto state_machine =
+    state_machine =
         std::make_shared<RuntimeStateMachine>(TrafficState::CAR_RED);
+    state_machine->get_current_state();
 
     controller = std::make_unique<TrafficLightController>(
         state_machine, std::make_unique<ConsoleDisplayService>(),
