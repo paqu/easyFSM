@@ -211,9 +211,9 @@ class TrafficLightActionHandler : public ActionHandler {
     bool pedestrian_request = false;
     std::unique_ptr<IDisplayService> displayService;
     std::unique_ptr<ITimerService> timerService;
-    void start_timeout(uint32_t duration) const;
 
     void display_traffic_state(TrafficState state);
+    void start_state_timer(TrafficState state);
 
   public:
     TrafficLightActionHandler(std::unique_ptr<IDisplayService> ds,
