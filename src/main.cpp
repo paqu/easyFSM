@@ -154,23 +154,24 @@ std::shared_ptr<RuntimeStateMachine> state_machine;
 int main() {
     state_machine =
         std::make_shared<RuntimeStateMachine>(TrafficState::CAR_RED);
-    state_machine->get_current_state();
+
+    auto traffic_handler = std::make_unique<TrafficLightActionHandler>(
+        std::make_unique<ConsoleDisplayService>(),
+        std::make_unique<FunctionTimerService>(start_timeout));
+    auto handler_raw = traffic_handler.get();
 
     controller = std::make_unique<TrafficLightController>(
-        state_machine, std::make_unique<ConsoleDisplayService>(),
-        std::make_unique<FunctionTimerService>(start_timeout),
-        std::make_unique<TrafficLightActionHandler>());
+        state_machine, std::move(traffic_handler));
 
     state_machine->add_transition(std::make_unique<SimpleStateTransition>(
         TrafficState::CAR_GREEN, SystemEvent::TIME_EXPIRED,
         TrafficState::CAR_YELLOW));
     // FIXED: Safe conditional transition using raw pointer
-    auto controller_raw = controller.get();
     state_machine->add_transition(std::make_unique<TrafficLightTransition>(
         TrafficState::CAR_YELLOW, SystemEvent::TIME_EXPIRED,
         TrafficState::CAR_RED, TrafficState::WALK_PREP,
-        [controller_raw]() -> bool {
-            return controller_raw->has_pedestrian_request();
+        [handler_raw]() -> bool {
+            return handler_raw->has_pedestrian_request();
         }));
 
     state_machine->add_transition(std::make_unique<SimpleStateTransition>(

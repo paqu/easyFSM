@@ -192,35 +192,32 @@ class ActionHandler {
 class TrafficLightController {
   public:
     TrafficLightController(std::shared_ptr<StateMachine> state_machine,
-                           std::unique_ptr<IDisplayService> ds,
-                           std::unique_ptr<ITimerService> ts,
                            std::unique_ptr<ActionHandler> ah);
 
     void button_pressed();
     void timeout_expired();
-    bool has_pedestrian_request() const;
     void handle_event(SystemEvent event);
-
     void handle_timeout();
     void handle_button_press();
-    void handle(TrafficState current_state, SystemEvent event,
-                TrafficState next_state);
 
   private:
-    bool pedestrian_request;
-    std::map<TrafficState, StateContext> states;
-    std::unique_ptr<IDisplayService> displayService;
-    std::unique_ptr<ITimerService> timerService;
     std::shared_ptr<StateMachine> state_machine;
     std::unique_ptr<ActionHandler> action_handler;
-
-    void start_timeout(uint32_t duration) const;
 };
 
 class TrafficLightActionHandler : public ActionHandler {
+  private:
+    std::map<TrafficState, StateContext> states;
+    bool pedestrian_request = false;
+    std::unique_ptr<IDisplayService> displayService;
+    std::unique_ptr<ITimerService> timerService;
+    void start_timeout(uint32_t duration) const;
+
   public:
-    TrafficLightActionHandler();
+    TrafficLightActionHandler(std::unique_ptr<IDisplayService> ds,
+                              std::unique_ptr<ITimerService> ts);
 
     void handle(TrafficState current_state, SystemEvent event,
                 TrafficState next_state) override;
+    bool has_pedestrian_request() const;
 };
