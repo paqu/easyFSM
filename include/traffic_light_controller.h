@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <set>
@@ -181,11 +182,19 @@ class TrafficLightTransition : public StateTransition {
     }
 };
 
+class ActionHandler {
+  public:
+    virtual ~ActionHandler() = default;
+    virtual void handle(TrafficState current_state, SystemEvent event,
+                        TrafficState next_state) = 0;
+};
+
 class TrafficLightController {
   public:
     TrafficLightController(std::shared_ptr<StateMachine> state_machine,
                            std::unique_ptr<IDisplayService> ds,
-                           std::unique_ptr<ITimerService> ts);
+                           std::unique_ptr<ITimerService> ts,
+                           std::unique_ptr<ActionHandler> ah);
 
     void button_pressed();
     void timeout_expired();
@@ -203,6 +212,15 @@ class TrafficLightController {
     std::unique_ptr<IDisplayService> displayService;
     std::unique_ptr<ITimerService> timerService;
     std::shared_ptr<StateMachine> state_machine;
+    std::unique_ptr<ActionHandler> action_handler;
 
     void start_timeout(uint32_t duration) const;
+};
+
+class TrafficLightActionHandler : public ActionHandler {
+  public:
+    TrafficLightActionHandler();
+
+    void handle(TrafficState current_state, SystemEvent event,
+                TrafficState next_state) override;
 };

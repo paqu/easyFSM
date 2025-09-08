@@ -1,5 +1,6 @@
 #include "traffic_light_controller.h"
 #include <iostream>
+#include <memory>
 
 // Stream operators for easy printing
 std::ostream &operator<<(std::ostream &os, TrafficState state) {
@@ -79,9 +80,10 @@ std::vector<SystemEvent> RuntimeStateMachine::get_all_events() const {
 
 TrafficLightController::TrafficLightController(
     std::shared_ptr<StateMachine> sm, std::unique_ptr<IDisplayService> ds,
-    std::unique_ptr<ITimerService> ts)
+    std::unique_ptr<ITimerService> ts, std::unique_ptr<ActionHandler> ah)
     : pedestrian_request(false), displayService(std::move(ds)),
-      timerService(std::move(ts)), state_machine(sm) {
+      timerService(std::move(ts)), state_machine(sm),
+      action_handler(std::move(ah)) {
 
     // Initialize all states
     states[TrafficState::CAR_GREEN] = {
@@ -187,6 +189,8 @@ void TrafficLightController::handle_event(SystemEvent event) {
         new_state = state_machine->get_current_state();
     }
 
+    action_handler->handle(current_state, event, new_state);
+
     handle(current_state, event, new_state);
 }
 
@@ -225,3 +229,16 @@ std::string EnumUtils::event_to_string(SystemEvent event) {
         return "UNKNOWN_EVENT";
     }
 }
+
+TrafficLightActionHandler::TrafficLightActionHandler() {
+    std::cout << "Consturctor executed";
+}
+
+void TrafficLightActionHandler::handle(TrafficState current_state,
+                                       SystemEvent event,
+                                       TrafficState next_state) {
+    (void)current_state;
+    (void)event;
+    (void)next_state;
+    std::cout << "Injected handler executed" << std::endl;
+};

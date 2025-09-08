@@ -158,7 +158,8 @@ int main() {
 
     controller = std::make_unique<TrafficLightController>(
         state_machine, std::make_unique<ConsoleDisplayService>(),
-        std::make_unique<FunctionTimerService>(start_timeout));
+        std::make_unique<FunctionTimerService>(start_timeout),
+        std::make_unique<TrafficLightActionHandler>());
 
     state_machine->add_transition(std::make_unique<SimpleStateTransition>(
         TrafficState::CAR_GREEN, SystemEvent::TIME_EXPIRED,
