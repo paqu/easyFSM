@@ -213,6 +213,8 @@ class TrafficLightActionHandler : public ActionHandler {
     std::unique_ptr<ITimerService> timerService;
     void start_timeout(uint32_t duration) const;
 
+    void display_traffic_state(TrafficState state);
+
   public:
     TrafficLightActionHandler(std::unique_ptr<IDisplayService> ds,
                               std::unique_ptr<ITimerService> ts);

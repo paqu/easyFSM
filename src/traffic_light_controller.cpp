@@ -216,9 +216,7 @@ void TrafficLightActionHandler::handle(TrafficState current_state,
     std::cout << "\n[" << now << "] Transition: " << current_state << " --["
               << event << "]--> " << next_state << std::endl;
 
-    StateContext context = states[next_state];
-
-    displayService->showState(context);
+    display_traffic_state(next_state);
 
     // Start timeout for next state
     start_timeout(states[next_state].duration);
@@ -229,4 +227,15 @@ void TrafficLightActionHandler::start_timeout(uint32_t duration) const {
 }
 bool TrafficLightActionHandler::has_pedestrian_request() const {
     return pedestrian_request;
+}
+
+void TrafficLightActionHandler::display_traffic_state(TrafficState state) {
+    auto it = states.find(state);
+    if (it != states.end()) {
+        const auto &ctx = it->second;
+
+        if (displayService) {
+            displayService->showState(ctx);
+        }
+    }
 }
