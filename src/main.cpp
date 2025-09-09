@@ -5,7 +5,13 @@
 #include <pthread.h>
 #include <unistd.h>
 
-#include "services.h"
+#include "console_display_service.h"
+#include "function_timer_service.h"
+#include "runtime_state_machine.h"
+#include "simple_state_transition.h"
+#include "traffic_light_transition.h"
+
+#include "traffic_light_action_handler.h"
 #include "traffic_light_controller.h"
 
 char shared_char;
@@ -158,6 +164,7 @@ int main() {
     auto traffic_handler = std::make_unique<TrafficLightActionHandler>(
         std::make_unique<ConsoleDisplayService>(),
         std::make_unique<FunctionTimerService>(start_timeout));
+
     auto handler_raw = traffic_handler.get();
 
     controller = std::make_unique<TrafficLightController>(
