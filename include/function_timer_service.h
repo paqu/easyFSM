@@ -1,7 +1,11 @@
 #pragma once
-
 #include "timer_service.h"
+
 #include <functional>
+
+/**
+ * @brief Timer service that delegates to a function
+ */
 
 class FunctionTimerService : public ITimerService {
   private:
