@@ -239,6 +239,7 @@ void TrafficLightActionHandler::start_state_timer(TrafficState state) {
         }
     }
 }
+
 void TrafficLightActionHandler::handle_button_press() {
     bool waiting_to_be_processed = false;
     if (!pedestrian_request) {
@@ -253,4 +254,13 @@ void TrafficLightActionHandler::handle_button_press() {
             displayService->showButtonState(waiting_to_be_processed);
         }
     }
+}
+void TrafficLightActionHandler::set_state_timeout(const TrafficState state,
+                                                  uint32_t timeout) {
+    states[state].duration = timeout;
+}
+
+void TrafficLightActionHandler::configure_state(TrafficState state,
+                                                const StateContext &config) {
+    states[state] = config;
 }

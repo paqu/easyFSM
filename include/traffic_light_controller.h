@@ -223,4 +223,7 @@ class TrafficLightActionHandler : public ActionHandler {
                 TrafficState next_state) override;
     bool has_pedestrian_request() const;
     void handle_button_press();
+    void set_state_timeout(const TrafficState state, uint32_t timeout);
+
+    void configure_state(TrafficState state, const StateContext &config);
 };
