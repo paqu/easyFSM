@@ -199,6 +199,7 @@ void TrafficLightActionHandler::handle(TrafficState current_state,
 
     if (event == SystemEvent::BUTTON_PRESSED) {
         handle_button_press();
+        return;
     } else if (event == SystemEvent::TIME_EXPIRED &&
                next_state == TrafficState::WALK_FINISH) {
         pedestrian_request = false;
