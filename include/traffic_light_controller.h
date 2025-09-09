@@ -189,20 +189,34 @@ class ActionHandler {
                         TrafficState next_state) = 0;
 };
 
-class TrafficLightController {
+class BaseController {
+  private:
+    std::shared_ptr<StateMachine> state_machine;
+    std::unique_ptr<ActionHandler> action_handler;
+
+  public:
+    BaseController(std::shared_ptr<StateMachine> state_machine,
+                   std::unique_ptr<ActionHandler> action_handler);
+    virtual ~BaseController() = default;
+
+  protected:
+    void handle_event(SystemEvent event);
+
+    std::shared_ptr<StateMachine> get_state_machine() const;
+    ActionHandler *get_action_handler() const;
+};
+
+class TrafficLightController : public BaseController {
   public:
     TrafficLightController(std::shared_ptr<StateMachine> state_machine,
                            std::unique_ptr<ActionHandler> ah);
 
     void button_pressed();
     void timeout_expired();
-    void handle_event(SystemEvent event);
-    void handle_timeout();
-    void handle_button_press();
 
   private:
-    std::shared_ptr<StateMachine> state_machine;
-    std::unique_ptr<ActionHandler> action_handler;
+    void handle_button_press();
+    void handle_timeout();
 };
 
 class TrafficLightActionHandler : public ActionHandler {

@@ -78,35 +78,6 @@ std::vector<SystemEvent> RuntimeStateMachine::get_all_events() const {
     return std::vector<SystemEvent>(events.begin(), events.end());
 }
 
-TrafficLightController::TrafficLightController(
-    std::shared_ptr<StateMachine> sm, std::unique_ptr<ActionHandler> ah)
-    : state_machine(sm), action_handler(std::move(ah)) {}
-
-void TrafficLightController::handle_event(SystemEvent event) {
-    TrafficState new_state = state_machine->get_current_state();
-    TrafficState current_state = state_machine->get_current_state();
-
-    bool ret = state_machine->process_event(event);
-
-    if (ret) { // true means that event rised state change
-        new_state = state_machine->get_current_state();
-    }
-
-    action_handler->handle(current_state, event, new_state);
-}
-
-void TrafficLightController::handle_button_press() {
-    handle_event(SystemEvent::BUTTON_PRESSED);
-}
-
-void TrafficLightController::handle_timeout() {
-    handle_event(SystemEvent::TIME_EXPIRED);
-}
-
-void TrafficLightController::button_pressed() { handle_button_press(); }
-
-void TrafficLightController::timeout_expired() { handle_timeout(); }
-
 std::string EnumUtils::state_to_string(TrafficState state) {
     switch (state) {
     case TrafficState::CAR_GREEN:
@@ -265,3 +236,73 @@ void TrafficLightActionHandler::configure_state(TrafficState state,
                                                 const StateContext &config) {
     states[state] = config;
 }
+
+BaseController::BaseController(std::shared_ptr<StateMachine> sm,
+                               std::unique_ptr<ActionHandler> ah)
+    : state_machine(sm), action_handler(std::move(ah)) {}
+
+void BaseController::handle_event(SystemEvent event) {
+
+    TrafficState current_state = state_machine->get_current_state();
+    TrafficState new_state = current_state;
+    bool ret = state_machine->process_event(event);
+    if (ret) { // true means that event rised state change
+        new_state = state_machine->get_current_state();
+    }
+
+    action_handler->handle(current_state, event, new_state);
+}
+
+std::shared_ptr<StateMachine> BaseController::get_state_machine() const {
+    return state_machine;
+}
+
+ActionHandler *BaseController::get_action_handler() const {
+    return action_handler.get();
+}
+/*
+TrafficLightController::TrafficLightController(
+    std::shared_ptr<StateMachine> sm, std::unique_ptr<ActionHandler> ah)
+    : state_machine(sm), action_handler(std::move(ah)) {}
+
+void TrafficLightController::handle_event(SystemEvent event) {
+    TrafficState new_state = state_machine->get_current_state();
+    TrafficState current_state = state_machine->get_current_state();
+
+    bool ret = state_machine->process_event(event);
+
+    if (ret) { // true means that event rised state change
+        new_state = state_machine->get_current_state();
+    }
+
+    action_handler->handle(current_state, event, new_state);
+}
+
+
+void TrafficLightController::handle_button_press() {
+    handle_event(SystemEvent::BUTTON_PRESSED);
+}
+
+void TrafficLightController::handle_timeout() {
+    handle_event(SystemEvent::TIME_EXPIRED);
+}
+
+void TrafficLightController::button_pressed() { handle_button_press(); }
+
+void TrafficLightController::timeout_expired() { handle_timeout(); }
+*/
+TrafficLightController::TrafficLightController(
+    std::shared_ptr<StateMachine> sm, std::unique_ptr<ActionHandler> ah)
+    : BaseController(sm, std::move(ah)) {}
+
+void TrafficLightController::handle_button_press() {
+    handle_event(SystemEvent::BUTTON_PRESSED);
+}
+
+void TrafficLightController::handle_timeout() {
+    handle_event(SystemEvent::TIME_EXPIRED);
+}
+
+void TrafficLightController::button_pressed() { handle_button_press(); }
+
+void TrafficLightController::timeout_expired() { handle_timeout(); }
