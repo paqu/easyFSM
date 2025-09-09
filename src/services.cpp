@@ -21,7 +21,7 @@ void ConsoleDisplayService::showButtonState(bool waiting_to_be_processed) {
     if (waiting_to_be_processed == false) {
         std::cout << "Button Pressed" << std::endl;
     } else {
-        std::cout << "Request is waiting to be processed." << std::endl;
+        std::cout << "Request is pending." << std::endl;
     }
 }
 

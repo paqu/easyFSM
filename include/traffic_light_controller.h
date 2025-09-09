@@ -222,4 +222,5 @@ class TrafficLightActionHandler : public ActionHandler {
     void handle(TrafficState current_state, SystemEvent event,
                 TrafficState next_state) override;
     bool has_pedestrian_request() const;
+    void handle_button_press();
 };

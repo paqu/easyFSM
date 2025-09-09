@@ -198,19 +198,9 @@ void TrafficLightActionHandler::handle(TrafficState current_state,
                    .count();
 
     if (event == SystemEvent::BUTTON_PRESSED) {
-        bool waiting_to_be_processed = false;
-        if (pedestrian_request != true) {
-            pedestrian_request = true;
-            displayService->showButtonState(waiting_to_be_processed);
-        } else {
-            waiting_to_be_processed = true;
-            displayService->showButtonState(waiting_to_be_processed);
-        }
-        return;
+        handle_button_press();
     } else if (event == SystemEvent::TIME_EXPIRED &&
                next_state == TrafficState::WALK_FINISH) {
-        std::cout << "Clearing pedestrian request after walk phase"
-                  << std::endl;
         pedestrian_request = false;
     }
     std::cout << "\n[" << now << "] Transition: " << current_state << " --["
@@ -246,6 +236,21 @@ void TrafficLightActionHandler::start_state_timer(TrafficState state) {
         if (timerService) {
 
             timerService->start_timeout(duration_sec);
+        }
+    }
+}
+void TrafficLightActionHandler::handle_button_press() {
+    bool waiting_to_be_processed = false;
+    if (!pedestrian_request) {
+        pedestrian_request = true;
+
+        if (displayService) {
+            displayService->showButtonState(waiting_to_be_processed);
+        }
+    } else {
+        waiting_to_be_processed = true;
+        if (displayService) {
+            displayService->showButtonState(waiting_to_be_processed);
         }
     }
 }
