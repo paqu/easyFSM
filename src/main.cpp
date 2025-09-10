@@ -52,9 +52,60 @@ int main() {
 
     return 0;
 }
+#include "traffic_light_factory.h"
+
 void demo() {
-    std::cout << "Demo started!\n";
-    // End program
+    auto timer_func = [](uint32_t duration) {
+        std::cout << "Timer started for " << duration << " seconds\n";
+        // In real implementation, this would set up actual timer
+    };
+
+    // Create factories
+    StandardTrafficLightFactory standard_factory;
+    SimpleTrafficLightFactory simple_factory;
+
+    std::cout << "=== Creating Standard Traffic Light ===\n";
+    auto standard_controller = standard_factory.create_controller(
+        std::make_unique<ConsoleDisplayService>(),
+        std::make_unique<FunctionTimerService>(
+            std::function<void(uint32_t)>(timer_func)));
+    std::cout << "Factory: " << standard_factory.get_factory_name() << "\n\n";
+
+    std::cout << "=== Creating Simple Traffic Light ===\n";
+    auto simple_controller = simple_factory.create_controller(
+        std::make_unique<ConsoleDisplayService>(),
+        std::make_unique<FunctionTimerService>(
+            std::function<void(uint32_t)>(timer_func)));
+    std::cout << "Factory: " << simple_factory.get_factory_name() << "\n\n";
+
+    // Demonstrate differences
+    std::cout << "=== Standard Traffic Light Simulation ===\n";
+    standard_controller->timeout_expired(); // GREEN -> YELLOW
+    standard_controller->timeout_expired(); // YELLOW -> RED
+    standard_controller->timeout_expired(); // RED -> RED_YELLOW
+    standard_controller->timeout_expired(); // RED_YELLOW -> GREEN
+
+    std::cout << "\n=== Simple Traffic Light Simulation ===\n";
+    simple_controller->timeout_expired(); // GREEN -> YELLOW
+    simple_controller->timeout_expired(); // YELLOW -> RED
+    simple_controller->timeout_expired(); // RED -> GREEN (no RED_YELLOW)
+    std::cout << "\n=== Testing Pedestrian Request ===\n";
+    std::cout << "Standard with pedestrian:\n";
+    standard_controller->timeout_expired(); // GREEN -> YELLOW
+    standard_controller->button_pressed();  // Pedestrian request
+    standard_controller->button_pressed();  // Pedestrian request
+    standard_controller->timeout_expired(); // YELLOW -> WALK_PREP
+    standard_controller->timeout_expired(); // WALK_PREP -> WALK
+    standard_controller->timeout_expired(); // WALK -> WALK_FINISH
+    //
+    std::cout << "\nSimple with pedestrian:\n";
+    simple_controller->button_pressed();  // Pedestrian request
+    simple_controller->timeout_expired(); // GREEN -> YELLOW
+    simple_controller->timeout_expired(); // YELLOW -> WALK_PREP
+    simple_controller->timeout_expired(); // WALK_PREP -> WALK
+    simple_controller->timeout_expired(); // WALK -> WALK_FINISH
+    simple_controller
+        ->timeout_expired(); // WALK_FINISH -> GREEN (no RED_YELLOW)
 }
 
 void simulation() {
