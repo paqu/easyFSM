@@ -62,14 +62,9 @@ void simulation() {
     state_machine =
         std::make_shared<RuntimeStateMachine>(TrafficState::CAR_RED);
 
-    auto traffic_handler = std::make_unique<TrafficLightActionHandler>(
+    auto traffic_handler = std::make_shared<TrafficLightActionHandler>(
         std::make_unique<ConsoleDisplayService>(),
         std::make_unique<FunctionTimerService>(start_timeout));
-
-    auto handler_raw = traffic_handler.get();
-
-    controller = std::make_unique<TrafficLightController>(
-        state_machine, std::move(traffic_handler));
 
     state_machine->add_transition(std::make_unique<SimpleStateTransition>(
         TrafficState::CAR_GREEN, SystemEvent::TIME_EXPIRED,
@@ -78,8 +73,8 @@ void simulation() {
     state_machine->add_transition(std::make_unique<TrafficLightTransition>(
         TrafficState::CAR_YELLOW, SystemEvent::TIME_EXPIRED,
         TrafficState::CAR_RED, TrafficState::WALK_PREP,
-        [handler_raw]() -> bool {
-            return handler_raw->has_pedestrian_request();
+        [traffic_handler]() -> bool {
+            return traffic_handler->has_pedestrian_request();
         }));
 
     state_machine->add_transition(std::make_unique<SimpleStateTransition>(
@@ -101,6 +96,9 @@ void simulation() {
     state_machine->add_transition(std::make_unique<SimpleStateTransition>(
         TrafficState::CAR_RED_YELLOW, SystemEvent::TIME_EXPIRED,
         TrafficState::CAR_GREEN));
+
+    controller = std::make_unique<TrafficLightController>(state_machine,
+                                                          traffic_handler);
 
     pthread_t reader_thread, worker_thread, timeout_thread;
     pthread_mutex_init(&worker_mutex, nullptr);

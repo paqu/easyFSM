@@ -12,11 +12,11 @@
 class BaseController {
   private:
     std::shared_ptr<IStateMachine> state_machine;
-    std::unique_ptr<IActionHandler> action_handler;
+    std::shared_ptr<IActionHandler> action_handler;
 
   public:
     BaseController(std::shared_ptr<IStateMachine> state_machine,
-                   std::unique_ptr<IActionHandler> action_handler);
+                   std::shared_ptr<IActionHandler> action_handler);
     virtual ~BaseController() = default;
 
   protected:

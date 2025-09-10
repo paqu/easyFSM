@@ -1,8 +1,8 @@
 #include "base_controller.h"
 
 BaseController::BaseController(std::shared_ptr<IStateMachine> sm,
-                               std::unique_ptr<IActionHandler> ah)
-    : state_machine(sm), action_handler(std::move(ah)) {}
+                               std::shared_ptr<IActionHandler> ah)
+    : state_machine(sm), action_handler(ah) {}
 
 void BaseController::handle_event(SystemEvent event) {
 
