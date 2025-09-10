@@ -1,8 +1,8 @@
 #pragma once
 
 #include "action_handler.h"
-#include "display_serivce.h"
-#include "states_context.h"
+#include "display_service.h"
+#include "state_context.h"
 #include "timer_service.h"
 #include <map>
 #include <memory>

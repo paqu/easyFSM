@@ -1,5 +1,5 @@
 #pragma once
-#include "display_serivce.h"
+#include "display_service.h"
 
 /**
  * @brief Console-based implementation of display service

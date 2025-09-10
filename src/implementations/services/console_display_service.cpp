@@ -1,7 +1,7 @@
-#include "console_display_service.h"
-#include "function_timer_service.h"
 
-#include "states_context.h"
+#include "console_display_service.h"
+
+#include "state_context.h"
 #include <iostream>
 
 void ConsoleDisplayService::showState(const StateContext &ctx) {
@@ -26,14 +26,4 @@ void ConsoleDisplayService::showButtonState(bool waiting_to_be_processed) {
     } else {
         std::cout << "Request is pending." << std::endl;
     }
-}
-
-FunctionTimerService::FunctionTimerService(std::function<void(uint32_t)> func)
-    : timer_function(std::move(func)) {}
-
-FunctionTimerService::FunctionTimerService(void (*func)(uint32_t))
-    : timer_function(func) {}
-
-void FunctionTimerService::start_timeout(uint32_t duration_sec) {
-    timer_function(duration_sec);
 }
