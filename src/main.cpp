@@ -60,23 +60,17 @@ void demo() {
         // In real implementation, this would set up actual timer
     };
 
-    // Create factories
-    StandardTrafficLightFactory standard_factory;
-    SimpleTrafficLightFactory simple_factory;
-
     std::cout << "=== Creating Standard Traffic Light ===\n";
-    auto standard_controller = standard_factory.create_controller(
-        std::make_unique<ConsoleDisplayService>(),
+    auto standard_controller = TrafficLightFactory::create_controller(
+        TrafficLightType::STANDARD, std::make_unique<ConsoleDisplayService>(),
         std::make_unique<FunctionTimerService>(
             std::function<void(uint32_t)>(timer_func)));
-    std::cout << "Factory: " << standard_factory.get_factory_name() << "\n\n";
 
     std::cout << "=== Creating Simple Traffic Light ===\n";
-    auto simple_controller = simple_factory.create_controller(
-        std::make_unique<ConsoleDisplayService>(),
+    auto simple_controller = TrafficLightFactory::create_controller(
+        TrafficLightType::SIMPLE, std::make_unique<ConsoleDisplayService>(),
         std::make_unique<FunctionTimerService>(
             std::function<void(uint32_t)>(timer_func)));
-    std::cout << "Factory: " << simple_factory.get_factory_name() << "\n\n";
 
     // Demonstrate differences
     std::cout << "=== Standard Traffic Light Simulation ===\n";

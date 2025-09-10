@@ -1,44 +1,57 @@
 #pragma once
 
 #include "display_service.h"
+#include "runtime_state_machine.h"
 #include "timer_service.h"
 #include "traffic_light_controller.h"
 #include <memory>
 
 /**
- * @brief Abstract factory for creating traffic light systems
+ * @brief Traffic light types supported by the factory
+ */
+enum class TrafficLightType {
+    STANDARD, // With RED_YELLOW state
+    SIMPLE    // Without RED_YELLOW state
+};
+
+/**
+ * @brief Factory for creating different types of traffic light systems
  */
 class TrafficLightFactory {
   public:
-    virtual ~TrafficLightFactory() = default;
+    /**
+     * @brief Create a traffic light controller of specified type
+     * @param type Type of traffic light to create
+     * @param display_service Display service to use
+     * @param timer_service Timer service to use
+     * @return Unique pointer to created controller
+     */
+    static std::unique_ptr<TrafficLightController>
+    create_controller(TrafficLightType type,
+                      std::unique_ptr<IDisplayService> display_service,
+                      std::unique_ptr<ITimerService> timer_service);
 
-    virtual std::unique_ptr<TrafficLightController>
-    create_controller(std::unique_ptr<IDisplayService> display_service,
-                      std::unique_ptr<ITimerService> timer_service) = 0;
+    /**
+     * @brief Create a standard traffic light controller (with RED_YELLOW)
+     */
+    static std::unique_ptr<TrafficLightController>
+    create_standard_controller(std::unique_ptr<IDisplayService> display_service,
+                               std::unique_ptr<ITimerService> timer_service);
 
-    virtual std::string get_factory_name() const = 0;
-};
+    /**
+     * @brief Create a simple traffic light controller (without RED_YELLOW)
+     */
+    static std::unique_ptr<TrafficLightController>
+    create_simple_controller(std::unique_ptr<IDisplayService> display_service,
+                             std::unique_ptr<ITimerService> timer_service);
 
-/**
- * @brief Factory for standard traffic lights (with RED_YELLOW state)
- */
-class StandardTrafficLightFactory : public TrafficLightFactory {
-  public:
-    std::unique_ptr<TrafficLightController>
-    create_controller(std::unique_ptr<IDisplayService> display_service,
-                      std::unique_ptr<ITimerService> timer_service) override;
+  private:
+    // Helper methods for creating state machines
+    static void setup_standard_transitions(
+        std::shared_ptr<RuntimeStateMachine> state_machine,
+        std::function<bool()> ped_check);
 
-    std::string get_factory_name() const override;
-};
-
-/**
- * @brief Factory for simplified traffic lights (without RED_YELLOW state)
- */
-class SimpleTrafficLightFactory : public TrafficLightFactory {
-  public:
-    std::unique_ptr<TrafficLightController>
-    create_controller(std::unique_ptr<IDisplayService> display_service,
-                      std::unique_ptr<ITimerService> timer_service) override;
-
-    std::string get_factory_name() const override;
+    static void
+    setup_simple_transitions(std::shared_ptr<RuntimeStateMachine> state_machine,
+                             std::function<bool()> ped_check);
 };
