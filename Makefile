@@ -20,7 +20,8 @@ SRC_SUBDIRS = models \
               implementations/transitions \
               implementations/handlers \
               controllers \
-              utils
+              utils \
+			  factories
 
 # Find all source files in subdirectories + main.cpp
 SOURCES = $(foreach dir,$(SRC_SUBDIRS),$(wildcard $(SRC_DIR)/$(dir)/*.cpp)) \
@@ -44,7 +45,8 @@ INCLUDES = -I$(INC_DIR) \
            -I$(INC_DIR)/implementations/transitions \
            -I$(INC_DIR)/implementations/handlers \
            -I$(INC_DIR)/controllers \
-           -I$(INC_DIR)/utils
+           -I$(INC_DIR)/utils \
+           -I$(INC_DIR)/factories
 
 # Colors for output
 RED = \033[0;31m

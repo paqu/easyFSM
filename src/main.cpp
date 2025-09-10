@@ -25,6 +25,146 @@ pthread_mutex_t timeout_mutex;
 pthread_cond_t worker_convar;
 pthread_cond_t start_timeout_convar;
 
+void demo();
+void simulation();
+void start_timeout(uint32_t duration_sec);
+void *read_char(void *arg);
+void *worker(void *arg);
+void *timeout_generator(void *arg);
+
+std::shared_ptr<RuntimeStateMachine> state_machine;
+std::unique_ptr<TrafficLightController> controller;
+
+int main() {
+    std::cout << "Choose mode:\n";
+    std::cout << "1. Demo\n";
+    std::cout << "2. Simulation\n";
+    std::cout << "Enter choice (1 or 2): ";
+
+    int choice;
+    std::cin >> choice;
+
+    if (choice == 1) {
+        demo();
+    } else {
+        simulation();
+    }
+
+    return 0;
+}
+#include "traffic_light_factory.h"
+
+void demo() {
+    auto timer_func = [](uint32_t duration) {
+        std::cout << "Timer started for " << duration << " seconds\n";
+        // In real implementation, this would set up actual timer
+    };
+
+    std::cout << "=== Creating Standard Traffic Light ===\n";
+    auto standard_controller = TrafficLightFactory::create_controller(
+        TrafficLightType::STANDARD, std::make_unique<ConsoleDisplayService>(),
+        std::make_unique<FunctionTimerService>(
+            std::function<void(uint32_t)>(timer_func)));
+
+    std::cout << "=== Creating Simple Traffic Light ===\n";
+    auto simple_controller = TrafficLightFactory::create_controller(
+        TrafficLightType::SIMPLE, std::make_unique<ConsoleDisplayService>(),
+        std::make_unique<FunctionTimerService>(
+            std::function<void(uint32_t)>(timer_func)));
+
+    // Demonstrate differences
+    std::cout << "=== Standard Traffic Light Simulation ===\n";
+    standard_controller->timeout_expired(); // GREEN -> YELLOW
+    standard_controller->timeout_expired(); // YELLOW -> RED
+    standard_controller->timeout_expired(); // RED -> RED_YELLOW
+    standard_controller->timeout_expired(); // RED_YELLOW -> GREEN
+
+    std::cout << "\n=== Simple Traffic Light Simulation ===\n";
+    simple_controller->timeout_expired(); // GREEN -> YELLOW
+    simple_controller->timeout_expired(); // YELLOW -> RED
+    simple_controller->timeout_expired(); // RED -> GREEN (no RED_YELLOW)
+    std::cout << "\n=== Testing Pedestrian Request ===\n";
+    std::cout << "Standard with pedestrian:\n";
+    standard_controller->timeout_expired(); // GREEN -> YELLOW
+    standard_controller->button_pressed();  // Pedestrian request
+    standard_controller->button_pressed();  // Pedestrian request
+    standard_controller->timeout_expired(); // YELLOW -> WALK_PREP
+    standard_controller->timeout_expired(); // WALK_PREP -> WALK
+    standard_controller->timeout_expired(); // WALK -> WALK_FINISH
+    //
+    std::cout << "\nSimple with pedestrian:\n";
+    simple_controller->button_pressed();  // Pedestrian request
+    simple_controller->timeout_expired(); // GREEN -> YELLOW
+    simple_controller->timeout_expired(); // YELLOW -> WALK_PREP
+    simple_controller->timeout_expired(); // WALK_PREP -> WALK
+    simple_controller->timeout_expired(); // WALK -> WALK_FINISH
+    simple_controller
+        ->timeout_expired(); // WALK_FINISH -> GREEN (no RED_YELLOW)
+}
+
+void simulation() {
+    // Original code
+    state_machine =
+        std::make_shared<RuntimeStateMachine>(TrafficState::CAR_RED);
+
+    auto traffic_handler = std::make_shared<TrafficLightActionHandler>(
+        std::make_unique<ConsoleDisplayService>(),
+        std::make_unique<FunctionTimerService>(start_timeout));
+
+    state_machine->add_transition(std::make_unique<SimpleStateTransition>(
+        TrafficState::CAR_GREEN, SystemEvent::TIME_EXPIRED,
+        TrafficState::CAR_YELLOW));
+
+    state_machine->add_transition(std::make_unique<TrafficLightTransition>(
+        TrafficState::CAR_YELLOW, SystemEvent::TIME_EXPIRED,
+        TrafficState::CAR_RED, TrafficState::WALK_PREP,
+        [traffic_handler]() -> bool {
+            return traffic_handler->has_pedestrian_request();
+        }));
+
+    state_machine->add_transition(std::make_unique<SimpleStateTransition>(
+        TrafficState::CAR_RED, SystemEvent::TIME_EXPIRED,
+        TrafficState::CAR_RED_YELLOW));
+
+    state_machine->add_transition(std::make_unique<SimpleStateTransition>(
+        TrafficState::WALK_PREP, SystemEvent::TIME_EXPIRED,
+        TrafficState::WALK));
+
+    state_machine->add_transition(std::make_unique<SimpleStateTransition>(
+        TrafficState::WALK, SystemEvent::TIME_EXPIRED,
+        TrafficState::WALK_FINISH));
+
+    state_machine->add_transition(std::make_unique<SimpleStateTransition>(
+        TrafficState::WALK_FINISH, SystemEvent::TIME_EXPIRED,
+        TrafficState::CAR_RED_YELLOW));
+
+    state_machine->add_transition(std::make_unique<SimpleStateTransition>(
+        TrafficState::CAR_RED_YELLOW, SystemEvent::TIME_EXPIRED,
+        TrafficState::CAR_GREEN));
+
+    controller = std::make_unique<TrafficLightController>(state_machine,
+                                                          traffic_handler);
+
+    pthread_t reader_thread, worker_thread, timeout_thread;
+    pthread_mutex_init(&worker_mutex, nullptr);
+    pthread_mutex_init(&timeout_mutex, nullptr);
+    pthread_cond_init(&worker_convar, nullptr);
+    pthread_cond_init(&start_timeout_convar, nullptr);
+
+    pthread_create(&reader_thread, nullptr, read_char, nullptr);
+    pthread_create(&worker_thread, nullptr, worker, nullptr);
+    pthread_create(&timeout_thread, nullptr, timeout_generator, nullptr);
+
+    pthread_join(reader_thread, nullptr);
+    pthread_join(worker_thread, nullptr);
+    pthread_join(timeout_thread, nullptr);
+
+    pthread_mutex_destroy(&worker_mutex);
+    pthread_mutex_destroy(&timeout_mutex);
+    pthread_cond_destroy(&worker_convar);
+    pthread_cond_destroy(&start_timeout_convar);
+}
+
 void process_traffic_light(bool timeout_expired, bool button_pressed);
 
 /**
@@ -141,8 +281,6 @@ void *worker(void *arg) {
     return nullptr;
 }
 
-std::unique_ptr<TrafficLightController> controller;
-
 /**
  * Main function for traffic light state machine
  * @param timeout_expired true when the last timeout started with @ref
@@ -156,7 +294,8 @@ void process_traffic_light(bool timeout_expired, bool button_pressed) {
     if (timeout_expired)
         controller->timeout_expired();
 }
-std::shared_ptr<RuntimeStateMachine> state_machine;
+
+/*
 int main() {
     state_machine =
         std::make_shared<RuntimeStateMachine>(TrafficState::CAR_RED);
@@ -222,3 +361,4 @@ int main() {
 
     return 0;
 }
+*/

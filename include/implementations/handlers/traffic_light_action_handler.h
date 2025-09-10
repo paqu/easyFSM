@@ -15,8 +15,8 @@ class TrafficLightActionHandler : public IActionHandler {
   private:
     std::map<TrafficState, StateContext> states;
     bool pedestrian_request = false;
-    std::unique_ptr<IDisplayService> displayService;
-    std::unique_ptr<ITimerService> timerService;
+    std::unique_ptr<IDisplayService> display_service;
+    std::unique_ptr<ITimerService> timer_service;
 
     void display_traffic_state(TrafficState state);
     void start_state_timer(TrafficState state);
@@ -28,7 +28,7 @@ class TrafficLightActionHandler : public IActionHandler {
     void handle(TrafficState current_state, SystemEvent event,
                 TrafficState next_state) override;
     bool has_pedestrian_request() const;
-    void handle_button_press();
+    void handle_button_press_event();
     void set_state_timeout(const TrafficState state, uint32_t timeout);
 
     void configure_state(TrafficState state, const StateContext &config);

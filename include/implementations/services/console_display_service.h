@@ -6,6 +6,6 @@
  */
 class ConsoleDisplayService : public IDisplayService {
   public:
-    void showState(const StateContext &ctx) override;
-    void showButtonState(bool is_new_request) override;
+    void show_state(const StateContext &ctx) override;
+    void show_button_state(bool is_new_request) override;
 };

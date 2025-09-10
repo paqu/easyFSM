@@ -8,8 +8,8 @@
 
 TrafficLightActionHandler::TrafficLightActionHandler(
     std::unique_ptr<IDisplayService> ds, std::unique_ptr<ITimerService> ts)
-    : pedestrian_request(false), displayService(std::move(ds)),
-      timerService(std::move(ts)) {
+    : pedestrian_request(false), display_service(std::move(ds)),
+      timer_service(std::move(ts)) {
 
     // Initialize all states
     states[TrafficState::CAR_GREEN] = {
@@ -65,7 +65,7 @@ void TrafficLightActionHandler::handle(TrafficState current_state,
                    .count();
 
     if (event == SystemEvent::BUTTON_PRESSED) {
-        handle_button_press();
+        handle_button_press_event();
         return;
     } else if (event == SystemEvent::TIME_EXPIRED &&
                next_state == TrafficState::WALK_FINISH) {
@@ -90,8 +90,8 @@ void TrafficLightActionHandler::display_traffic_state(TrafficState state) {
     if (it != states.end()) {
         const auto &ctx = it->second;
 
-        if (displayService) {
-            displayService->showState(ctx);
+        if (display_service) {
+            display_service->show_state(ctx);
         }
     }
 }
@@ -103,25 +103,25 @@ void TrafficLightActionHandler::start_state_timer(TrafficState state) {
         const auto &ctx = it->second;
         uint32_t duration_sec = ctx.duration;
 
-        if (timerService) {
+        if (timer_service) {
 
-            timerService->start_timeout(duration_sec);
+            timer_service->start_timeout(duration_sec);
         }
     }
 }
 
-void TrafficLightActionHandler::handle_button_press() {
+void TrafficLightActionHandler::handle_button_press_event() {
     bool waiting_to_be_processed = false;
     if (!pedestrian_request) {
         pedestrian_request = true;
 
-        if (displayService) {
-            displayService->showButtonState(waiting_to_be_processed);
+        if (display_service) {
+            display_service->show_button_state(waiting_to_be_processed);
         }
     } else {
         waiting_to_be_processed = true;
-        if (displayService) {
-            displayService->showButtonState(waiting_to_be_processed);
+        if (display_service) {
+            display_service->show_button_state(waiting_to_be_processed);
         }
     }
 }

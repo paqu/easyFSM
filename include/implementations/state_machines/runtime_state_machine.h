@@ -1,3 +1,4 @@
+#pragma once
 #include "state_machine.h"
 #include "state_transition.h"
 #include "system_events.h"

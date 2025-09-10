@@ -8,7 +8,7 @@
 class TrafficLightController : public BaseController {
   public:
     TrafficLightController(std::shared_ptr<IStateMachine> state_machine,
-                           std::unique_ptr<IActionHandler> ah);
+                           std::shared_ptr<IActionHandler> ah);
 
     void button_pressed();
     void timeout_expired();
