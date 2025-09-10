@@ -25,6 +25,103 @@ pthread_mutex_t timeout_mutex;
 pthread_cond_t worker_convar;
 pthread_cond_t start_timeout_convar;
 
+void demo();
+void simulation();
+void start_timeout(uint32_t duration_sec);
+void *read_char(void *arg);
+void *worker(void *arg);
+void *timeout_generator(void *arg);
+
+std::shared_ptr<RuntimeStateMachine> state_machine;
+std::unique_ptr<TrafficLightController> controller;
+
+int main() {
+    std::cout << "Choose mode:\n";
+    std::cout << "1. Demo\n";
+    std::cout << "2. Simulation\n";
+    std::cout << "Enter choice (1 or 2): ";
+
+    int choice;
+    std::cin >> choice;
+
+    if (choice == 1) {
+        demo();
+    } else {
+        simulation();
+    }
+
+    return 0;
+}
+void demo() {
+    std::cout << "Demo started!\n";
+    // End program
+}
+
+void simulation() {
+    // Original code
+    state_machine =
+        std::make_shared<RuntimeStateMachine>(TrafficState::CAR_RED);
+
+    auto traffic_handler = std::make_unique<TrafficLightActionHandler>(
+        std::make_unique<ConsoleDisplayService>(),
+        std::make_unique<FunctionTimerService>(start_timeout));
+
+    auto handler_raw = traffic_handler.get();
+
+    controller = std::make_unique<TrafficLightController>(
+        state_machine, std::move(traffic_handler));
+
+    state_machine->add_transition(std::make_unique<SimpleStateTransition>(
+        TrafficState::CAR_GREEN, SystemEvent::TIME_EXPIRED,
+        TrafficState::CAR_YELLOW));
+
+    state_machine->add_transition(std::make_unique<TrafficLightTransition>(
+        TrafficState::CAR_YELLOW, SystemEvent::TIME_EXPIRED,
+        TrafficState::CAR_RED, TrafficState::WALK_PREP,
+        [handler_raw]() -> bool {
+            return handler_raw->has_pedestrian_request();
+        }));
+
+    state_machine->add_transition(std::make_unique<SimpleStateTransition>(
+        TrafficState::CAR_RED, SystemEvent::TIME_EXPIRED,
+        TrafficState::CAR_RED_YELLOW));
+
+    state_machine->add_transition(std::make_unique<SimpleStateTransition>(
+        TrafficState::WALK_PREP, SystemEvent::TIME_EXPIRED,
+        TrafficState::WALK));
+
+    state_machine->add_transition(std::make_unique<SimpleStateTransition>(
+        TrafficState::WALK, SystemEvent::TIME_EXPIRED,
+        TrafficState::WALK_FINISH));
+
+    state_machine->add_transition(std::make_unique<SimpleStateTransition>(
+        TrafficState::WALK_FINISH, SystemEvent::TIME_EXPIRED,
+        TrafficState::CAR_RED_YELLOW));
+
+    state_machine->add_transition(std::make_unique<SimpleStateTransition>(
+        TrafficState::CAR_RED_YELLOW, SystemEvent::TIME_EXPIRED,
+        TrafficState::CAR_GREEN));
+
+    pthread_t reader_thread, worker_thread, timeout_thread;
+    pthread_mutex_init(&worker_mutex, nullptr);
+    pthread_mutex_init(&timeout_mutex, nullptr);
+    pthread_cond_init(&worker_convar, nullptr);
+    pthread_cond_init(&start_timeout_convar, nullptr);
+
+    pthread_create(&reader_thread, nullptr, read_char, nullptr);
+    pthread_create(&worker_thread, nullptr, worker, nullptr);
+    pthread_create(&timeout_thread, nullptr, timeout_generator, nullptr);
+
+    pthread_join(reader_thread, nullptr);
+    pthread_join(worker_thread, nullptr);
+    pthread_join(timeout_thread, nullptr);
+
+    pthread_mutex_destroy(&worker_mutex);
+    pthread_mutex_destroy(&timeout_mutex);
+    pthread_cond_destroy(&worker_convar);
+    pthread_cond_destroy(&start_timeout_convar);
+}
+
 void process_traffic_light(bool timeout_expired, bool button_pressed);
 
 /**
@@ -141,8 +238,6 @@ void *worker(void *arg) {
     return nullptr;
 }
 
-std::unique_ptr<TrafficLightController> controller;
-
 /**
  * Main function for traffic light state machine
  * @param timeout_expired true when the last timeout started with @ref
@@ -156,7 +251,8 @@ void process_traffic_light(bool timeout_expired, bool button_pressed) {
     if (timeout_expired)
         controller->timeout_expired();
 }
-std::shared_ptr<RuntimeStateMachine> state_machine;
+
+/*
 int main() {
     state_machine =
         std::make_shared<RuntimeStateMachine>(TrafficState::CAR_RED);
@@ -222,3 +318,4 @@ int main() {
 
     return 0;
 }
+*/
