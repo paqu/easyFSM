@@ -4,7 +4,7 @@
 #include "state_context.h"
 #include <iostream>
 
-void ConsoleDisplayService::showState(const StateContext &ctx) {
+void ConsoleDisplayService::show_state(const StateContext &ctx) {
     std::cout << "\n------------------------ \n"
               << "Traffic Light State:\n"
               << "------------------------ \n";
@@ -20,7 +20,7 @@ void ConsoleDisplayService::showState(const StateContext &ctx) {
     std::cout << std::endl;
 }
 
-void ConsoleDisplayService::showButtonState(bool waiting_to_be_processed) {
+void ConsoleDisplayService::show_button_state(bool waiting_to_be_processed) {
     if (waiting_to_be_processed == false) {
         std::cout << "Button Pressed" << std::endl;
     } else {
