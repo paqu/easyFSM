@@ -32,15 +32,6 @@ OBJECTS = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
 # Dependency files
 DEPS = $(OBJECTS:.o=.d)
 
-# Compilation of object files with subdirectory support
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	@echo "$(YELLOW)Compiling $<...$(NC)"
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
-
-# Include dependency files if they exist
--include $(DEPS)
-
 # Object subdirectories
 OBJ_SUBDIRS = $(addprefix $(OBJ_DIR)/,$(SRC_SUBDIRS))
 
@@ -55,7 +46,7 @@ INCLUDES = -I$(INC_DIR) \
            -I$(INC_DIR)/controllers \
            -I$(INC_DIR)/utils
 
-# Colors for output (optional)
+# Colors for output
 RED = \033[0;31m
 GREEN = \033[0;32m
 YELLOW = \033[0;33m
@@ -77,16 +68,18 @@ $(TARGET): $(OBJECTS)
 	$(CXX) $(LDFLAGS) -o $@ $^
 	@echo "$(GREEN)Executable created: $@$(NC)"
 
-# Compilation of object files with subdirectory support
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@echo "$(YELLOW)Compiling $<...$(NC)"
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
+# Include dependency files if they exist (MUST be after compilation rule)
+-include $(DEPS)
+
 # Clean build files
 clean:
 	@echo "$(RED)Cleaning build files...$(NC)"
-	rm -rf $(OBJECTS) $(TARGET)
+	rm -rf $(OBJECTS) $(DEPS) $(TARGET)
 	@echo "$(GREEN)Clean completed!$(NC)"
 
 # Full clean (removes directories too)
@@ -100,6 +93,8 @@ run: all
 	@echo "$(YELLOW)Press any key for pedestrian button, 'q' to quit$(NC)"
 	@./$(TARGET)
 
+
+
 # Help
 help:
 	@echo "$(GREEN)Available targets:$(NC)"
@@ -107,6 +102,7 @@ help:
 	@echo "  make clean     - Remove object files and executable"
 	@echo "  make distclean - Remove all generated files and directories"
 	@echo "  make run       - Build and run the simulator"
+	@echo "  make rebuild   - Clean and rebuild"
 	@echo "  make debug     - Build with debug symbols"
 	@echo "  make help      - Show this help message"
 
