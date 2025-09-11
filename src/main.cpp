@@ -102,13 +102,15 @@ void demo() {
         ->timeout_expired(); // WALK_FINISH -> GREEN (no RED_YELLOW)
 }
 
+#include "ascii_display_service.h"
+
 void simulation() {
     // Original code
     state_machine =
         std::make_shared<RuntimeStateMachine>(TrafficState::CAR_RED);
 
     auto traffic_handler = std::make_shared<TrafficLightActionHandler>(
-        std::make_unique<ConsoleDisplayService>(),
+        std::make_unique<AsciiDisplayService>(),
         std::make_unique<FunctionTimerService>(start_timeout));
 
     state_machine->add_transition(std::make_unique<SimpleStateTransition>(
