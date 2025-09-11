@@ -42,7 +42,11 @@ int main() {
     std::cout << "Enter choice (1 or 2): ";
 
     int choice;
-    std::cin >> choice;
+    if (!(std::cin >> choice)) {
+        std::cin.clear();            // wyczyść flagę błędu
+        std::cin.ignore(1000, '\n'); // usuń śmieci z bufora
+        choice = 2;
+    }
 
     if (choice == 1) {
         demo();
@@ -105,6 +109,21 @@ void demo() {
 #include "ascii_display_service.h"
 
 void simulation() {
+    std::cout << "\n==== Simulation mode started ====" << std::endl;
+    std::cout << " * Press any key to start" << std::endl;
+    std::cout << " * Press 'q' to quit the program" << std::endl;
+    std::cout << "=================================" << std::endl;
+
+    char start_char;
+    std::cin >> start_char;
+
+    if (start_char == 'q' || start_char == 'Q') {
+        std::cout << "\nReturning to main menu..." << std::endl;
+        return; // exit simulation() immediately
+    }
+
+    std::cout << "\nStarting simulation..." << std::endl;
+
     // Original code
     state_machine =
         std::make_shared<RuntimeStateMachine>(TrafficState::CAR_RED);
@@ -275,7 +294,6 @@ void *worker(void *arg) {
 
         // If 'q' is entered, stop the timeout thread as well
         if (shared_char == 'q') {
-            start_timeout(0);
             break;
         }
     }

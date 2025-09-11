@@ -92,7 +92,6 @@ distclean: clean
 # Run the program
 run: all
 	@echo "$(GREEN)Running Traffic Light Simulator...$(NC)"
-	@echo "$(YELLOW)Press any key for pedestrian button, 'q' to quit$(NC)"
 	@./$(TARGET)
 
 
