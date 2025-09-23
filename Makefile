@@ -16,8 +16,6 @@ TARGET = $(BIN_DIR)/traffic_light_simulator
 # Source subdirectories
 SRC_SUBDIRS = models \
               implementations/services \
-              implementations/state_machines \
-              implementations/transitions \
               implementations/handlers \
               controllers \
               utils \

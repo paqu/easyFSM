@@ -9,8 +9,8 @@
 #include "function_timer_service.h"
 #include "runtime_state_machine.h"
 #include "simple_state_transition.h"
-#include "traffic_light_transition.h"
 
+#include "conditional_state_transation.h"
 #include "traffic_light_action_handler.h"
 #include "traffic_light_controller.h"
 
@@ -138,12 +138,13 @@ void simulation() {
             TrafficState::CAR_GREEN, SystemEvent::TIME_EXPIRED,
             TrafficState::CAR_YELLOW));
 
-    state_machine->add_transition(std::make_unique<TrafficLightTransition>(
-        TrafficState::CAR_YELLOW, SystemEvent::TIME_EXPIRED,
-        TrafficState::CAR_RED, TrafficState::WALK_PREP,
-        [traffic_handler]() -> bool {
-            return traffic_handler->has_pedestrian_request();
-        }));
+    state_machine->add_transition(
+        std::make_unique<ConditionalStateTransition<TrafficState, SystemEvent>>(
+            TrafficState::CAR_YELLOW, SystemEvent::TIME_EXPIRED,
+            TrafficState::CAR_RED, TrafficState::WALK_PREP,
+            [traffic_handler]() -> bool {
+                return traffic_handler->has_pedestrian_request();
+            }));
 
     state_machine->add_transition(
         std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
@@ -340,8 +341,8 @@ int main() {
 SystemEvent>>( TrafficState::CAR_GREEN, SystemEvent::TIME_EXPIRED,
         TrafficState::CAR_YELLOW));
     // FIXED: Safe conditional transition using raw pointer
-    state_machine->add_transition(std::make_unique<TrafficLightTransition>(
-        TrafficState::CAR_YELLOW, SystemEvent::TIME_EXPIRED,
+    state_machine->add_transition(std::make_unique<ConditionalStateTransition<TrafficState,
+SystemEvent>>( TrafficState::CAR_YELLOW, SystemEvent::TIME_EXPIRED,
         TrafficState::CAR_RED, TrafficState::WALK_PREP,
         [handler_raw]() -> bool {
             return handler_raw->has_pedestrian_request();

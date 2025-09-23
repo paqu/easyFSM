@@ -1,9 +1,9 @@
 #include "traffic_light_factory.h"
+#include "conditional_state_transation.h"
 #include "light_timings.h"
 #include "runtime_state_machine.h"
 #include "simple_state_transition.h"
 #include "traffic_light_action_handler.h"
-#include "traffic_light_transition.h"
 
 std::unique_ptr<TrafficLightController> TrafficLightFactory::create_controller(
     TrafficLightType type, std::unique_ptr<IDisplayService> display_service,
@@ -82,9 +82,10 @@ void TrafficLightFactory::setup_standard_transitions(
             TrafficState::CAR_GREEN, SystemEvent::TIME_EXPIRED,
             TrafficState::CAR_YELLOW));
 
-    state_machine->add_transition(std::make_unique<TrafficLightTransition>(
-        TrafficState::CAR_YELLOW, SystemEvent::TIME_EXPIRED,
-        TrafficState::CAR_RED, TrafficState::WALK_PREP, ped_check));
+    state_machine->add_transition(
+        std::make_unique<ConditionalStateTransition<TrafficState, SystemEvent>>(
+            TrafficState::CAR_YELLOW, SystemEvent::TIME_EXPIRED,
+            TrafficState::CAR_RED, TrafficState::WALK_PREP, ped_check));
 
     state_machine->add_transition(
         std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
@@ -122,9 +123,10 @@ void TrafficLightFactory::setup_simple_transitions(
             TrafficState::CAR_GREEN, SystemEvent::TIME_EXPIRED,
             TrafficState::CAR_YELLOW));
 
-    state_machine->add_transition(std::make_unique<TrafficLightTransition>(
-        TrafficState::CAR_YELLOW, SystemEvent::TIME_EXPIRED,
-        TrafficState::CAR_RED, TrafficState::WALK_PREP, ped_check));
+    state_machine->add_transition(
+        std::make_unique<ConditionalStateTransition<TrafficState, SystemEvent>>(
+            TrafficState::CAR_YELLOW, SystemEvent::TIME_EXPIRED,
+            TrafficState::CAR_RED, TrafficState::WALK_PREP, ped_check));
 
     state_machine->add_transition(
         std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
