@@ -13,7 +13,8 @@ template <typename StateType, typename EventType>
 class RuntimeStateMachine : public IStateMachine<StateType, EventType> {
   private:
     StateType current_state;
-    std::vector<std::unique_ptr<IStateTransition>> transitions;
+    std::vector<std::unique_ptr<IStateTransition<StateType, EventType>>>
+        transitions;
     std::set<StateType> states;
     std::set<EventType> events;
 
@@ -30,10 +31,11 @@ class RuntimeStateMachine : public IStateMachine<StateType, EventType> {
         current_state = state;
     }
 
-    void add_transition(std::unique_ptr<IStateTransition> transition) override {
-        states.insert(static_cast<StateType>(transition->get_from_state()));
-        states.insert(static_cast<StateType>(transition->get_to_state()));
-        events.insert(static_cast<EventType>(transition->get_trigger_event()));
+    void add_transition(std::unique_ptr<IStateTransition<StateType, EventType>>
+                            transition) override {
+        states.insert((transition->get_from_state()));
+        states.insert((transition->get_to_state()));
+        events.insert((transition->get_trigger_event()));
         transitions.push_back(std::move(transition));
     }
 
@@ -41,8 +43,9 @@ class RuntimeStateMachine : public IStateMachine<StateType, EventType> {
                              EventType event) const override {
         auto it = std::find_if(
             transitions.begin(), transitions.end(),
-            [&current_state,
-             &event](const std::unique_ptr<IStateTransition> &t) {
+            [&current_state, &event](
+                const std::unique_ptr<IStateTransition<StateType, EventType>>
+                    &t) {
                 return t->can_transition(static_cast<StateType>(current_state),
                                          static_cast<EventType>(event));
             });

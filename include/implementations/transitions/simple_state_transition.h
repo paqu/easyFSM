@@ -1,25 +1,30 @@
 #pragma once
 #include "state_transition.h"
-#include "system_events.h"
-#include "traffic_states.h"
 
 /**
  * @brief Simple unconditional state transition
  */
-class SimpleStateTransition : public IStateTransition {
+
+template <typename StateType, typename EventType>
+class SimpleStateTransition : public IStateTransition<StateType, EventType> {
   private:
-    TrafficState from_state;
-    SystemEvent trigger_event;
-    TrafficState to_state;
+    StateType from_state;
+    EventType trigger_event;
+    StateType to_state;
 
   public:
-    SimpleStateTransition(TrafficState from_state, SystemEvent trigger_event,
-                          TrafficState to_state);
+    SimpleStateTransition(StateType from_state, EventType trigger_event,
+                          StateType to_state)
+        : from_state(from_state), trigger_event(trigger_event),
+          to_state(to_state) {}
 
-    TrafficState get_from_state() const override;
-    SystemEvent get_trigger_event() const override;
-    TrafficState get_to_state() const override;
+    StateType get_from_state() const override { return from_state; }
+    EventType get_trigger_event() const override { return trigger_event; }
+    StateType get_to_state() const override { return to_state; }
 
-    bool can_transition(TrafficState current_state,
-                        SystemEvent event) const override;
+    bool can_transition(StateType current_state,
+                        EventType event) const override {
+        return this->from_state == current_state &&
+               this->trigger_event == event;
+    }
 };

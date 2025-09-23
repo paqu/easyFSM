@@ -7,7 +7,8 @@
 /**
  * @brief Conditional transition based on pedestrian request
  */
-class TrafficLightTransition : public IStateTransition {
+class TrafficLightTransition
+    : public IStateTransition<TrafficState, SystemEvent> {
   private:
     TrafficState from_state;
     SystemEvent trigger_event;
