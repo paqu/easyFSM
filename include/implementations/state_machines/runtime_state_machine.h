@@ -1,9 +1,7 @@
 #pragma once
 #include "state_machine.h"
 #include "state_transition.h"
-#include "system_events.h"
-#include "traffic_states.h"
-
+#include <algorithm>
 #include <memory>
 #include <set>
 #include <vector>
@@ -11,28 +9,64 @@
 /**
  * @brief Runtime configurable state machine
  */
-class RuntimeStateMachine : public IStateMachine {
+template <typename StateType, typename EventType>
+class RuntimeStateMachine : public IStateMachine<StateType, EventType> {
   private:
-    TrafficState current_state;
+    StateType current_state;
     std::vector<std::unique_ptr<IStateTransition>> transitions;
-    std::set<TrafficState> states;
-    std::set<SystemEvent> events;
+    std::set<StateType> states;
+    std::set<EventType> events;
 
   public:
-    explicit RuntimeStateMachine(TrafficState initial_state);
+    explicit RuntimeStateMachine(StateType initial_state)
+        : current_state(initial_state) {
+        states.insert(initial_state);
+    }
 
-    TrafficState get_current_state() const override;
+    StateType get_current_state() const override { return current_state; }
 
-    void set_state(TrafficState state) override;
+    void set_state(StateType state) override {
+        states.insert(state);
+        current_state = state;
+    }
 
-    void add_transition(std::unique_ptr<IStateTransition> transition) override;
+    void add_transition(std::unique_ptr<IStateTransition> transition) override {
+        states.insert(static_cast<StateType>(transition->get_from_state()));
+        states.insert(static_cast<StateType>(transition->get_to_state()));
+        events.insert(static_cast<EventType>(transition->get_trigger_event()));
+        transitions.push_back(std::move(transition));
+    }
 
-    TrafficState get_next_state(TrafficState current_state,
-                                SystemEvent event) const override;
+    StateType get_next_state(StateType current_state,
+                             EventType event) const override {
+        auto it = std::find_if(
+            transitions.begin(), transitions.end(),
+            [&current_state,
+             &event](const std::unique_ptr<IStateTransition> &t) {
+                return t->can_transition(static_cast<StateType>(current_state),
+                                         static_cast<EventType>(event));
+            });
 
-    bool process_event(SystemEvent event) override;
+        if (it != transitions.end()) {
+            return static_cast<StateType>((*it)->get_to_state());
+        }
+        return current_state;
+    }
 
-    std::vector<TrafficState> get_all_states() const override;
+    bool process_event(EventType event) override {
+        StateType next_state = get_next_state(current_state, event);
+        if (next_state != current_state) {
+            current_state = next_state;
+            return true;
+        }
+        return false;
+    }
 
-    std::vector<SystemEvent> get_all_events() const override;
+    std::vector<StateType> get_all_states() const override {
+        return std::vector<StateType>(states.begin(), states.end());
+    }
+
+    std::vector<EventType> get_all_events() const override {
+        return std::vector<EventType>(events.begin(), events.end());
+    }
 };

@@ -4,6 +4,9 @@
 #include "runtime_state_machine.h"
 #include "timer_service.h"
 #include "traffic_light_controller.h"
+
+#include "system_events.h"
+#include "traffic_states.h"
 #include <memory>
 
 /**
@@ -48,10 +51,12 @@ class TrafficLightFactory {
   private:
     // Helper methods for creating state machines
     static void setup_standard_transitions(
-        std::shared_ptr<RuntimeStateMachine> state_machine,
+        std::shared_ptr<RuntimeStateMachine<TrafficState, SystemEvent>>
+            state_machine,
         std::function<bool()> ped_check);
 
-    static void
-    setup_simple_transitions(std::shared_ptr<RuntimeStateMachine> state_machine,
-                             std::function<bool()> ped_check);
+    static void setup_simple_transitions(
+        std::shared_ptr<RuntimeStateMachine<TrafficState, SystemEvent>>
+            state_machine,
+        std::function<bool()> ped_check);
 };

@@ -32,7 +32,7 @@ void *read_char(void *arg);
 void *worker(void *arg);
 void *timeout_generator(void *arg);
 
-std::shared_ptr<RuntimeStateMachine> state_machine;
+std::shared_ptr<RuntimeStateMachine<TrafficState, SystemEvent>> state_machine;
 std::unique_ptr<TrafficLightController> controller;
 
 int main() {
@@ -126,7 +126,8 @@ void simulation() {
 
     // Original code
     state_machine =
-        std::make_shared<RuntimeStateMachine>(TrafficState::CAR_RED);
+        std::make_shared<RuntimeStateMachine<TrafficState, SystemEvent>>(
+            TrafficState::CAR_RED);
 
     auto traffic_handler = std::make_shared<TrafficLightActionHandler>(
         std::make_unique<AsciiDisplayService>(),

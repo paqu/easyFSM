@@ -6,9 +6,9 @@ enum class SystemEvent;
 /**
  * @brief Interface for handling state transitions
  */
-class IActionHandler {
+template <typename StateType, typename EventType> class IActionHandler {
   public:
     virtual ~IActionHandler() = default;
-    virtual void handle(TrafficState current_state, SystemEvent event,
-                        TrafficState next_state) = 0;
+    virtual void handle(StateType current_state, EventType event,
+                        StateType next_state) = 0;
 };

@@ -28,7 +28,8 @@ TrafficLightFactory::create_standard_controller(
     std::unique_ptr<ITimerService> timer_service) {
 
     auto state_machine =
-        std::make_shared<RuntimeStateMachine>(TrafficState::CAR_GREEN);
+        std::make_shared<RuntimeStateMachine<TrafficState, SystemEvent>>(
+            TrafficState::CAR_GREEN);
 
     auto action_handler = std::make_shared<TrafficLightActionHandler>(
         std::move(display_service), std::move(timer_service));
@@ -49,7 +50,8 @@ TrafficLightFactory::create_simple_controller(
     std::unique_ptr<ITimerService> timer_service) {
 
     auto state_machine =
-        std::make_shared<RuntimeStateMachine>(TrafficState::CAR_GREEN);
+        std::make_shared<RuntimeStateMachine<TrafficState, SystemEvent>>(
+            TrafficState::CAR_GREEN);
 
     auto action_handler = std::make_shared<TrafficLightActionHandler>(
         std::move(display_service), std::move(timer_service));
@@ -71,7 +73,8 @@ TrafficLightFactory::create_simple_controller(
 }
 
 void TrafficLightFactory::setup_standard_transitions(
-    std::shared_ptr<RuntimeStateMachine> state_machine,
+    std::shared_ptr<RuntimeStateMachine<TrafficState, SystemEvent>>
+        state_machine,
     std::function<bool()> ped_check) {
 
     state_machine->add_transition(std::make_unique<SimpleStateTransition>(
@@ -104,7 +107,8 @@ void TrafficLightFactory::setup_standard_transitions(
 }
 
 void TrafficLightFactory::setup_simple_transitions(
-    std::shared_ptr<RuntimeStateMachine> state_machine,
+    std::shared_ptr<RuntimeStateMachine<TrafficState, SystemEvent>>
+        state_machine,
     std::function<bool()> ped_check) {
 
     state_machine->add_transition(std::make_unique<SimpleStateTransition>(

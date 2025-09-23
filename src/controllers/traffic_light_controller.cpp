@@ -1,7 +1,8 @@
 #include "traffic_light_controller.h"
 
 TrafficLightController::TrafficLightController(
-    std::shared_ptr<IStateMachine> sm, std::shared_ptr<IActionHandler> ah)
+    std::shared_ptr<IStateMachine<TrafficState, SystemEvent>> sm,
+    std::shared_ptr<IActionHandler<TrafficState, SystemEvent>> ah)
     : BaseController(sm, std::move(ah)) {}
 
 void TrafficLightController::handle_button_press() {
