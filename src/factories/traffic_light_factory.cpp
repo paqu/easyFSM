@@ -29,7 +29,7 @@ TrafficLightFactory::create_standard_controller(
     std::unique_ptr<ITimerService> timer_service) {
 
     auto state_machine =
-        std::make_shared<RuntimeStateMachine<TrafficState, SystemEvent>>(
+        std::make_shared<RuntimeStateMachine<TrafficState, TrafficEvent>>(
             TrafficState::CAR_GREEN);
 
     auto action_handler = std::make_shared<TrafficLightActionHandler>(
@@ -51,7 +51,7 @@ TrafficLightFactory::create_simple_controller(
     std::unique_ptr<ITimerService> timer_service) {
 
     auto state_machine =
-        std::make_shared<RuntimeStateMachine<TrafficState, SystemEvent>>(
+        std::make_shared<RuntimeStateMachine<TrafficState, TrafficEvent>>(
             TrafficState::CAR_GREEN);
 
     auto action_handler = std::make_shared<TrafficLightActionHandler>(
@@ -74,78 +74,78 @@ TrafficLightFactory::create_simple_controller(
 }
 
 void TrafficLightFactory::setup_standard_transitions(
-    std::shared_ptr<RuntimeStateMachine<TrafficState, SystemEvent>>
+    std::shared_ptr<RuntimeStateMachine<TrafficState, TrafficEvent>>
         state_machine,
     std::function<bool()> ped_check) {
 
     state_machine->add_transition(
-        std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::CAR_GREEN, SystemEvent::TIME_EXPIRED,
+        std::make_unique<SimpleStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::CAR_GREEN, TrafficEvent::TIME_EXPIRED,
             TrafficState::CAR_YELLOW));
 
     state_machine->add_transition(
-        std::make_unique<ConditionalStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::CAR_YELLOW, SystemEvent::TIME_EXPIRED,
+        std::make_unique<ConditionalStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::CAR_YELLOW, TrafficEvent::TIME_EXPIRED,
             TrafficState::CAR_RED, TrafficState::WALK_PREP, ped_check));
 
     state_machine->add_transition(
-        std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::CAR_RED, SystemEvent::TIME_EXPIRED,
+        std::make_unique<SimpleStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::CAR_RED, TrafficEvent::TIME_EXPIRED,
             TrafficState::CAR_RED_YELLOW));
 
     state_machine->add_transition(
-        std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::CAR_RED_YELLOW, SystemEvent::TIME_EXPIRED,
+        std::make_unique<SimpleStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::CAR_RED_YELLOW, TrafficEvent::TIME_EXPIRED,
             TrafficState::CAR_GREEN));
 
     state_machine->add_transition(
-        std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::WALK_PREP, SystemEvent::TIME_EXPIRED,
+        std::make_unique<SimpleStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::WALK_PREP, TrafficEvent::TIME_EXPIRED,
             TrafficState::WALK));
 
     state_machine->add_transition(
-        std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::WALK, SystemEvent::TIME_EXPIRED,
+        std::make_unique<SimpleStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::WALK, TrafficEvent::TIME_EXPIRED,
             TrafficState::WALK_FINISH));
 
     state_machine->add_transition(
-        std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::WALK_FINISH, SystemEvent::TIME_EXPIRED,
+        std::make_unique<SimpleStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::WALK_FINISH, TrafficEvent::TIME_EXPIRED,
             TrafficState::CAR_RED_YELLOW));
 }
 
 void TrafficLightFactory::setup_simple_transitions(
-    std::shared_ptr<RuntimeStateMachine<TrafficState, SystemEvent>>
+    std::shared_ptr<RuntimeStateMachine<TrafficState, TrafficEvent>>
         state_machine,
     std::function<bool()> ped_check) {
 
     state_machine->add_transition(
-        std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::CAR_GREEN, SystemEvent::TIME_EXPIRED,
+        std::make_unique<SimpleStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::CAR_GREEN, TrafficEvent::TIME_EXPIRED,
             TrafficState::CAR_YELLOW));
 
     state_machine->add_transition(
-        std::make_unique<ConditionalStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::CAR_YELLOW, SystemEvent::TIME_EXPIRED,
+        std::make_unique<ConditionalStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::CAR_YELLOW, TrafficEvent::TIME_EXPIRED,
             TrafficState::CAR_RED, TrafficState::WALK_PREP, ped_check));
 
     state_machine->add_transition(
-        std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::CAR_RED, SystemEvent::TIME_EXPIRED,
+        std::make_unique<SimpleStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::CAR_RED, TrafficEvent::TIME_EXPIRED,
             TrafficState::CAR_GREEN));
 
     state_machine->add_transition(
-        std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::WALK_PREP, SystemEvent::TIME_EXPIRED,
+        std::make_unique<SimpleStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::WALK_PREP, TrafficEvent::TIME_EXPIRED,
             TrafficState::WALK));
 
     state_machine->add_transition(
-        std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::WALK, SystemEvent::TIME_EXPIRED,
+        std::make_unique<SimpleStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::WALK, TrafficEvent::TIME_EXPIRED,
             TrafficState::WALK_FINISH));
 
     state_machine->add_transition(
-        std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::WALK_FINISH, SystemEvent::TIME_EXPIRED,
+        std::make_unique<SimpleStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::WALK_FINISH, TrafficEvent::TIME_EXPIRED,
             TrafficState::CAR_GREEN));
 }

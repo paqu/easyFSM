@@ -1,7 +1,7 @@
 #pragma once
 
 enum class TrafficState;
-enum class SystemEvent;
+enum class TrafficEvent;
 
 /**
  * @brief Interface for handling state transitions

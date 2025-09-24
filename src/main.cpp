@@ -32,7 +32,7 @@ void *read_char(void *arg);
 void *worker(void *arg);
 void *timeout_generator(void *arg);
 
-std::shared_ptr<RuntimeStateMachine<TrafficState, SystemEvent>> state_machine;
+std::shared_ptr<RuntimeStateMachine<TrafficState, TrafficEvent>> state_machine;
 std::unique_ptr<TrafficLightController> controller;
 
 int main() {
@@ -126,7 +126,7 @@ void simulation() {
 
     // Original code
     state_machine =
-        std::make_shared<RuntimeStateMachine<TrafficState, SystemEvent>>(
+        std::make_shared<RuntimeStateMachine<TrafficState, TrafficEvent>>(
             TrafficState::CAR_RED);
 
     auto traffic_handler = std::make_shared<TrafficLightActionHandler>(
@@ -134,41 +134,41 @@ void simulation() {
         std::make_unique<FunctionTimerService>(start_timeout));
 
     state_machine->add_transition(
-        std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::CAR_GREEN, SystemEvent::TIME_EXPIRED,
+        std::make_unique<SimpleStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::CAR_GREEN, TrafficEvent::TIME_EXPIRED,
             TrafficState::CAR_YELLOW));
 
     state_machine->add_transition(
-        std::make_unique<ConditionalStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::CAR_YELLOW, SystemEvent::TIME_EXPIRED,
+        std::make_unique<ConditionalStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::CAR_YELLOW, TrafficEvent::TIME_EXPIRED,
             TrafficState::CAR_RED, TrafficState::WALK_PREP,
             [traffic_handler]() -> bool {
                 return traffic_handler->has_pedestrian_request();
             }));
 
     state_machine->add_transition(
-        std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::CAR_RED, SystemEvent::TIME_EXPIRED,
+        std::make_unique<SimpleStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::CAR_RED, TrafficEvent::TIME_EXPIRED,
             TrafficState::CAR_RED_YELLOW));
 
     state_machine->add_transition(
-        std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::WALK_PREP, SystemEvent::TIME_EXPIRED,
+        std::make_unique<SimpleStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::WALK_PREP, TrafficEvent::TIME_EXPIRED,
             TrafficState::WALK));
 
     state_machine->add_transition(
-        std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::WALK, SystemEvent::TIME_EXPIRED,
+        std::make_unique<SimpleStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::WALK, TrafficEvent::TIME_EXPIRED,
             TrafficState::WALK_FINISH));
 
     state_machine->add_transition(
-        std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::WALK_FINISH, SystemEvent::TIME_EXPIRED,
+        std::make_unique<SimpleStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::WALK_FINISH, TrafficEvent::TIME_EXPIRED,
             TrafficState::CAR_RED_YELLOW));
 
     state_machine->add_transition(
-        std::make_unique<SimpleStateTransition<TrafficState, SystemEvent>>(
-            TrafficState::CAR_RED_YELLOW, SystemEvent::TIME_EXPIRED,
+        std::make_unique<SimpleStateTransition<TrafficState, TrafficEvent>>(
+            TrafficState::CAR_RED_YELLOW, TrafficEvent::TIME_EXPIRED,
             TrafficState::CAR_GREEN));
 
     controller = std::make_unique<TrafficLightController>(state_machine,
@@ -338,34 +338,34 @@ int main() {
         state_machine, std::move(traffic_handler));
 
     state_machine->add_transition(std::make_unique<SimpleStateTransition<TrafficState,
-SystemEvent>>( TrafficState::CAR_GREEN, SystemEvent::TIME_EXPIRED,
+TrafficEvent>>( TrafficState::CAR_GREEN, TrafficEvent::TIME_EXPIRED,
         TrafficState::CAR_YELLOW));
     // FIXED: Safe conditional transition using raw pointer
     state_machine->add_transition(std::make_unique<ConditionalStateTransition<TrafficState,
-SystemEvent>>( TrafficState::CAR_YELLOW, SystemEvent::TIME_EXPIRED,
+TrafficEvent>>( TrafficState::CAR_YELLOW, TrafficEvent::TIME_EXPIRED,
         TrafficState::CAR_RED, TrafficState::WALK_PREP,
         [handler_raw]() -> bool {
             return handler_raw->has_pedestrian_request();
         }));
 
     state_machine->add_transition(std::make_unique<SimpleStateTransition<TrafficState,
-SystemEvent>>( TrafficState::CAR_RED, SystemEvent::TIME_EXPIRED,
+TrafficEvent>>( TrafficState::CAR_RED, TrafficEvent::TIME_EXPIRED,
         TrafficState::CAR_RED_YELLOW));
 
     state_machine->add_transition(std::make_unique<SimpleStateTransition<TrafficState,
-SystemEvent>>( TrafficState::WALK_PREP, SystemEvent::TIME_EXPIRED,
+TrafficEvent>>( TrafficState::WALK_PREP, TrafficEvent::TIME_EXPIRED,
         TrafficState::WALK));
 
     state_machine->add_transition(std::make_unique<SimpleStateTransition<TrafficState,
-SystemEvent>>( TrafficState::WALK, SystemEvent::TIME_EXPIRED,
+TrafficEvent>>( TrafficState::WALK, TrafficEvent::TIME_EXPIRED,
         TrafficState::WALK_FINISH));
 
     state_machine->add_transition(std::make_unique<SimpleStateTransition<TrafficState,
-SystemEvent>>( TrafficState::WALK_FINISH, SystemEvent::TIME_EXPIRED,
+TrafficEvent>>( TrafficState::WALK_FINISH, TrafficEvent::TIME_EXPIRED,
         TrafficState::CAR_RED_YELLOW));
 
     state_machine->add_transition(std::make_unique<SimpleStateTransition<TrafficState,
-SystemEvent>>( TrafficState::CAR_RED_YELLOW, SystemEvent::TIME_EXPIRED,
+TrafficEvent>>( TrafficState::CAR_RED_YELLOW, TrafficEvent::TIME_EXPIRED,
         TrafficState::CAR_GREEN));
     pthread_t reader_thread, worker_thread, timeout_thread;
 

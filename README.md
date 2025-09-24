@@ -169,7 +169,7 @@ auto action_handler = std::make_shared<TrafficLightActionHandler>(
 // Configure transitions
 state_machine->add_transition(std::make_unique<SimpleStateTransition>(
     TrafficState::CAR_GREEN, 
-    SystemEvent::TIME_EXPIRED, 
+    TrafficEvent::TIME_EXPIRED, 
     TrafficState::CAR_YELLOW
 ));
 

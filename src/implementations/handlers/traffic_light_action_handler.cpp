@@ -1,6 +1,6 @@
 #include "traffic_light_action_handler.h"
 #include "light_timings.h"
-#include "system_events.h"
+#include "traffic_events.h"
 #include "traffic_states.h"
 
 #include <chrono>
@@ -58,17 +58,17 @@ TrafficLightActionHandler::TrafficLightActionHandler(
 }
 
 void TrafficLightActionHandler::handle(TrafficState current_state,
-                                       SystemEvent event,
+                                       TrafficEvent event,
                                        TrafficState next_state) {
 
     auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
                    std::chrono::system_clock::now().time_since_epoch())
                    .count();
 
-    if (event == SystemEvent::BUTTON_PRESSED) {
+    if (event == TrafficEvent::BUTTON_PRESSED) {
         handle_button_press_event();
         return;
-    } else if (event == SystemEvent::TIME_EXPIRED &&
+    } else if (event == TrafficEvent::TIME_EXPIRED &&
                next_state == TrafficState::WALK_FINISH) {
         pedestrian_request = false;
     }

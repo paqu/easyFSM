@@ -2,7 +2,7 @@
 
 // Forward declarations
 enum class TrafficState;
-enum class SystemEvent;
+enum class TrafficEvent;
 
 /**
  * @brief Interface for state transitions

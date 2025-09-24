@@ -1,7 +1,7 @@
 #include "enum_utils.h"
 #include "elevator_events.h"
 #include "elevator_states.h"
-#include "system_events.h"
+#include "traffic_events.h"
 #include "traffic_states.h"
 
 // Traffic light implementations (existing)
@@ -26,11 +26,11 @@ std::string EnumUtils::state_to_string(TrafficState state) {
     }
 }
 
-std::string EnumUtils::event_to_string(SystemEvent event) {
+std::string EnumUtils::event_to_string(TrafficEvent event) {
     switch (event) {
-    case SystemEvent::TIME_EXPIRED:
+    case TrafficEvent::TIME_EXPIRED:
         return "TIME_EXPIRED";
-    case SystemEvent::BUTTON_PRESSED:
+    case TrafficEvent::BUTTON_PRESSED:
         return "BUTTON_PRESSED";
     default:
         return "UNKNOWN_EVENT";

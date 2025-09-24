@@ -11,7 +11,7 @@
  * @brief Action handler specific to traffic light logic
  */
 class TrafficLightActionHandler
-    : public IActionHandler<TrafficState, SystemEvent> {
+    : public IActionHandler<TrafficState, TrafficEvent> {
   private:
     std::map<TrafficState, TrafficContext> states;
     bool pedestrian_request = false;
@@ -27,7 +27,7 @@ class TrafficLightActionHandler
         std::unique_ptr<ITimerService> ts);
 
     // Implementation of IActionHandler interface
-    void handle(TrafficState current_state, SystemEvent event,
+    void handle(TrafficState current_state, TrafficEvent event,
                 TrafficState next_state) override;
 
     // Traffic light specific methods
