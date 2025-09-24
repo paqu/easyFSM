@@ -5,10 +5,9 @@
 /**
  * @brief Console-based implementation of display service for elevators
  */
-class ElevatorConsoleDisplayService : public IDisplayService {
+class ElevatorConsoleDisplayService : public IDisplayService<ElevatorContext> {
   public:
-    void show_state(const StateContext &ctx) override;
-    void show_button_state(bool is_new_request) override;
+    void show_state(const ElevatorContext &ctx) override;
 
     // Elevator specific display methods
     void show_elevator_state(const ElevatorContext &ctx);

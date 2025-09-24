@@ -2,8 +2,8 @@
 
 #include "action_handler.h"
 #include "display_service.h"
-#include "state_context.h"
 #include "timer_service.h"
+#include "traffic_context.h"
 #include <map>
 #include <memory>
 
@@ -15,14 +15,14 @@ class TrafficLightActionHandler
   private:
     std::map<TrafficState, StateContext> states;
     bool pedestrian_request = false;
-    std::unique_ptr<IDisplayService> display_service;
+    std::unique_ptr<IDisplayService<StateContext>> display_service;
     std::unique_ptr<ITimerService> timer_service;
 
     void display_traffic_state(TrafficState state);
     void start_state_timer(TrafficState state);
 
   public:
-    TrafficLightActionHandler(std::unique_ptr<IDisplayService> ds,
+    TrafficLightActionHandler(std::unique_ptr<IDisplayService<StateContext>> ds,
                               std::unique_ptr<ITimerService> ts);
 
     // Implementation of IActionHandler interface

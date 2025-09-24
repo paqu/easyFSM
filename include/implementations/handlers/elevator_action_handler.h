@@ -16,7 +16,7 @@ class ElevatorActionHandler
     : public IActionHandler<ElevatorState, ElevatorEvent> {
   private:
     std::map<ElevatorState, ElevatorContext> states;
-    std::unique_ptr<IDisplayService> display_service;
+    std::unique_ptr<IDisplayService<ElevatorContext>> display_service;
     std::unique_ptr<ITimerService> timer_service;
 
     int current_floor;
@@ -29,7 +29,7 @@ class ElevatorActionHandler
     void start_state_timer(ElevatorState state);
 
   public:
-    ElevatorActionHandler(std::unique_ptr<IDisplayService> ds,
+    ElevatorActionHandler(std::unique_ptr<IDisplayService<ElevatorContext>> ds,
                           std::unique_ptr<ITimerService> ts,
                           int initial_floor = 0);
 

@@ -29,24 +29,24 @@ class TrafficLightFactory {
      * @param timer_service Timer service to use
      * @return Unique pointer to created controller
      */
-    static std::unique_ptr<TrafficLightController>
-    create_controller(TrafficLightType type,
-                      std::unique_ptr<IDisplayService> display_service,
-                      std::unique_ptr<ITimerService> timer_service);
+    static std::unique_ptr<TrafficLightController> create_controller(
+        TrafficLightType type,
+        std::unique_ptr<IDisplayService<StateContext>> display_service,
+        std::unique_ptr<ITimerService> timer_service);
 
     /**
      * @brief Create a standard traffic light controller (with RED_YELLOW)
      */
-    static std::unique_ptr<TrafficLightController>
-    create_standard_controller(std::unique_ptr<IDisplayService> display_service,
-                               std::unique_ptr<ITimerService> timer_service);
+    static std::unique_ptr<TrafficLightController> create_standard_controller(
+        std::unique_ptr<IDisplayService<StateContext>> display_service,
+        std::unique_ptr<ITimerService> timer_service);
 
     /**
      * @brief Create a simple traffic light controller (without RED_YELLOW)
      */
-    static std::unique_ptr<TrafficLightController>
-    create_simple_controller(std::unique_ptr<IDisplayService> display_service,
-                             std::unique_ptr<ITimerService> timer_service);
+    static std::unique_ptr<TrafficLightController> create_simple_controller(
+        std::unique_ptr<IDisplayService<StateContext>> display_service,
+        std::unique_ptr<ITimerService> timer_service);
 
   private:
     // Helper methods for creating state machines

@@ -1,4 +1,5 @@
 #include "elevator_action_handler.h"
+#include "elevator_context.h"
 #include "elevator_events.h"
 #include "elevator_states.h"
 #include "elevator_timings.h"
@@ -7,14 +8,14 @@
 #include <iostream>
 
 ElevatorActionHandler::ElevatorActionHandler(
-    std::unique_ptr<IDisplayService> ds, std::unique_ptr<ITimerService> ts,
-    int initial_floor)
+    std::unique_ptr<IDisplayService<ElevatorContext>> ds,
+    std::unique_ptr<ITimerService> ts, int initial_floor)
     : display_service(std::move(ds)), timer_service(std::move(ts)),
       current_floor(initial_floor), target_floor(initial_floor),
       emergency_active(false), obstacle_present(false) {
 
     std::map<ElevatorState, ElevatorContext> states;
-    std::unique_ptr<IDisplayService> display_service;
+    std::unique_ptr<IDisplayService<ElevatorContext>> display_service;
     std::unique_ptr<ITimerService> timer_service;
 
     // Initialize all elevator states

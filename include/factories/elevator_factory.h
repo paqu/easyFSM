@@ -1,6 +1,7 @@
 #pragma once
 
 #include "display_service.h"
+#include "elevator_context.h"
 #include "elevator_controller.h"
 #include "runtime_state_machine.h"
 #include "timer_service.h"
@@ -31,27 +32,27 @@ class ElevatorFactory {
      * @param max_floor Maximum floor number
      * @return Unique pointer to created controller
      */
-    static std::unique_ptr<ElevatorController>
-    create_controller(ElevatorType type,
-                      std::unique_ptr<IDisplayService> display_service,
-                      std::unique_ptr<ITimerService> timer_service,
-                      int min_floor = 0, int max_floor = 10);
+    static std::unique_ptr<ElevatorController> create_controller(
+        ElevatorType type,
+        std::unique_ptr<IDisplayService<ElevatorContext>> display_service,
+        std::unique_ptr<ITimerService> timer_service, int min_floor = 0,
+        int max_floor = 10);
 
     /**
      * @brief Create a basic elevator controller
      */
-    static std::unique_ptr<ElevatorController>
-    create_basic_controller(std::unique_ptr<IDisplayService> display_service,
-                            std::unique_ptr<ITimerService> timer_service,
-                            int min_floor = 0, int max_floor = 10);
+    static std::unique_ptr<ElevatorController> create_basic_controller(
+        std::unique_ptr<IDisplayService<ElevatorContext>> display_service,
+        std::unique_ptr<ITimerService> timer_service, int min_floor = 0,
+        int max_floor = 10);
 
     /**
      * @brief Create an advanced elevator controller with safety features
      */
-    static std::unique_ptr<ElevatorController>
-    create_advanced_controller(std::unique_ptr<IDisplayService> display_service,
-                               std::unique_ptr<ITimerService> timer_service,
-                               int min_floor = 0, int max_floor = 10);
+    static std::unique_ptr<ElevatorController> create_advanced_controller(
+        std::unique_ptr<IDisplayService<ElevatorContext>> display_service,
+        std::unique_ptr<ITimerService> timer_service, int min_floor = 0,
+        int max_floor = 10);
 
   private:
     // Helper methods for creating state machines

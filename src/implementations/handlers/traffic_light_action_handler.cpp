@@ -7,7 +7,8 @@
 #include <iostream>
 
 TrafficLightActionHandler::TrafficLightActionHandler(
-    std::unique_ptr<IDisplayService> ds, std::unique_ptr<ITimerService> ts)
+    std::unique_ptr<IDisplayService<StateContext>> ds,
+    std::unique_ptr<ITimerService> ts)
     : pedestrian_request(false), display_service(std::move(ds)),
       timer_service(std::move(ts)) {
 
@@ -111,19 +112,7 @@ void TrafficLightActionHandler::start_state_timer(TrafficState state) {
 }
 
 void TrafficLightActionHandler::handle_button_press_event() {
-    bool waiting_to_be_processed = false;
-    if (!pedestrian_request) {
-        pedestrian_request = true;
-
-        if (display_service) {
-            display_service->show_button_state(waiting_to_be_processed);
-        }
-    } else {
-        waiting_to_be_processed = true;
-        if (display_service) {
-            display_service->show_button_state(waiting_to_be_processed);
-        }
-    }
+    pedestrian_request = true;
 }
 void TrafficLightActionHandler::set_state_timeout(const TrafficState state,
                                                   uint32_t timeout) {

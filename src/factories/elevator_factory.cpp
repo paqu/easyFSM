@@ -5,7 +5,8 @@
 #include "simple_state_transition.h"
 
 std::unique_ptr<ElevatorController> ElevatorFactory::create_controller(
-    ElevatorType type, std::unique_ptr<IDisplayService> display_service,
+    ElevatorType type,
+    std::unique_ptr<IDisplayService<ElevatorContext>> display_service,
     std::unique_ptr<ITimerService> timer_service, int min_floor,
     int max_floor) {
 
@@ -26,7 +27,7 @@ std::unique_ptr<ElevatorController> ElevatorFactory::create_controller(
 }
 
 std::unique_ptr<ElevatorController> ElevatorFactory::create_basic_controller(
-    std::unique_ptr<IDisplayService> display_service,
+    std::unique_ptr<IDisplayService<ElevatorContext>> display_service,
     std::unique_ptr<ITimerService> timer_service, int min_floor,
     int max_floor) {
 
@@ -66,7 +67,7 @@ std::unique_ptr<ElevatorController> ElevatorFactory::create_basic_controller(
 }
 
 std::unique_ptr<ElevatorController> ElevatorFactory::create_advanced_controller(
-    std::unique_ptr<IDisplayService> display_service,
+    std::unique_ptr<IDisplayService<ElevatorContext>> display_service,
     std::unique_ptr<ITimerService> timer_service, int min_floor,
     int max_floor) {
 

@@ -4,8 +4,7 @@
 /**
  * @brief Console-based implementation of display service
  */
-class ConsoleDisplayService : public IDisplayService {
+class ConsoleDisplayService : public IDisplayService<StateContext> {
   public:
     void show_state(const StateContext &ctx) override;
-    void show_button_state(bool is_new_request) override;
 };

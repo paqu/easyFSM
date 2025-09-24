@@ -6,7 +6,8 @@
 #include "traffic_light_action_handler.h"
 
 std::unique_ptr<TrafficLightController> TrafficLightFactory::create_controller(
-    TrafficLightType type, std::unique_ptr<IDisplayService> display_service,
+    TrafficLightType type,
+    std::unique_ptr<IDisplayService<StateContext>> display_service,
     std::unique_ptr<ITimerService> timer_service) {
 
     switch (type) {
@@ -24,7 +25,7 @@ std::unique_ptr<TrafficLightController> TrafficLightFactory::create_controller(
 
 std::unique_ptr<TrafficLightController>
 TrafficLightFactory::create_standard_controller(
-    std::unique_ptr<IDisplayService> display_service,
+    std::unique_ptr<IDisplayService<StateContext>> display_service,
     std::unique_ptr<ITimerService> timer_service) {
 
     auto state_machine =
@@ -46,7 +47,7 @@ TrafficLightFactory::create_standard_controller(
 
 std::unique_ptr<TrafficLightController>
 TrafficLightFactory::create_simple_controller(
-    std::unique_ptr<IDisplayService> display_service,
+    std::unique_ptr<IDisplayService<StateContext>> display_service,
     std::unique_ptr<ITimerService> timer_service) {
 
     auto state_machine =

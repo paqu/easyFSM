@@ -1,11 +1,12 @@
 #pragma once
 #include "display_service.h"
+#include "traffic_context.h"
 #include <string>
 
 /**
  * @brief ASCII art-based implementation of display service
  */
-class AsciiDisplayService : public IDisplayService {
+class AsciiDisplayService : public IDisplayService<StateContext> {
   private:
     // ASCII art components
     std::string create_traffic_light_frame() const;
@@ -26,7 +27,6 @@ class AsciiDisplayService : public IDisplayService {
 
   public:
     void show_state(const StateContext &ctx) override;
-    void show_button_state(bool is_new_request) override;
 
     // Optional: disable colors for terminals that don't support them
     void set_color_enabled(bool enabled);

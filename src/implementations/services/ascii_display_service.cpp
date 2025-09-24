@@ -1,6 +1,6 @@
 #include "ascii_display_service.h"
 
-#include "state_context.h"
+#include "traffic_context.h"
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -43,35 +43,6 @@ void AsciiDisplayService::show_state(const StateContext &ctx) {
     std::cout << create_pedestrian_light(ctx.pedLights.red, ctx.pedLights.green)
               << std::endl;
     std::cout << create_separator() << std::endl;
-}
-
-void AsciiDisplayService::show_button_state(bool waiting_to_be_processed) {
-    std::string button_art =
-        R"(
-    ┌─────────────────────┐
-    │   🚶 PRESS HERE 🚶   │
-    │    ╔═══════════╗    │
-    │    ║  )" +
-        std::string(waiting_to_be_processed ? "⏳ WAIT" : "✓ PRESSED") +
-        R"(  ║    │
-    │    ╚═══════════╝    │
-    └─────────────────────┘
-    )";
-
-    std::cout << (color_enabled
-                      ? (waiting_to_be_processed ? YELLOW_COLOR : GREEN_COLOR)
-                      : "")
-              << button_art << (color_enabled ? RESET_COLOR : "") << std::endl;
-
-    if (waiting_to_be_processed) {
-        std::cout << (color_enabled ? YELLOW_COLOR : "")
-                  << "⚠️  Request is pending - please wait..."
-                  << (color_enabled ? RESET_COLOR : "") << std::endl;
-    } else {
-        std::cout << (color_enabled ? GREEN_COLOR : "")
-                  << "✅ Pedestrian crossing request registered!"
-                  << (color_enabled ? RESET_COLOR : "") << std::endl;
-    }
 }
 
 std::string AsciiDisplayService::create_traffic_light_frame() const {
