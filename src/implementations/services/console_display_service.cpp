@@ -4,7 +4,7 @@
 #include "traffic_context.h"
 #include <iostream>
 
-void ConsoleDisplayService::show_state(const StateContext &ctx) {
+void ConsoleDisplayService::show_state(const TrafficContext &ctx) {
     std::cout << "\n------------------------ \n"
               << "Traffic Light State:\n"
               << "------------------------ \n";

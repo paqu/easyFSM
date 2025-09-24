@@ -27,14 +27,14 @@ struct PedestrianLights {
 /**
  * @brief Complete state context with timing and light configuration
  */
-struct StateContext {
+struct TrafficContext {
     std::string name;
     uint32_t duration;
     TrafficLights carLights;
     PedestrianLights pedLights;
 
-    StateContext() = default;
-    StateContext(const std::string &n, uint32_t dur, const TrafficLights &car,
-                 const PedestrianLights &ped)
+    TrafficContext() = default;
+    TrafficContext(const std::string &n, uint32_t dur, const TrafficLights &car,
+                   const PedestrianLights &ped)
         : name(n), duration(dur), carLights(car), pedLights(ped) {}
 };

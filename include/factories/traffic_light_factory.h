@@ -6,6 +6,7 @@
 #include "traffic_light_controller.h"
 
 #include "system_events.h"
+#include "traffic_context.h"
 #include "traffic_states.h"
 #include <memory>
 
@@ -31,21 +32,21 @@ class TrafficLightFactory {
      */
     static std::unique_ptr<TrafficLightController> create_controller(
         TrafficLightType type,
-        std::unique_ptr<IDisplayService<StateContext>> display_service,
+        std::unique_ptr<IDisplayService<TrafficContext>> display_service,
         std::unique_ptr<ITimerService> timer_service);
 
     /**
      * @brief Create a standard traffic light controller (with RED_YELLOW)
      */
     static std::unique_ptr<TrafficLightController> create_standard_controller(
-        std::unique_ptr<IDisplayService<StateContext>> display_service,
+        std::unique_ptr<IDisplayService<TrafficContext>> display_service,
         std::unique_ptr<ITimerService> timer_service);
 
     /**
      * @brief Create a simple traffic light controller (without RED_YELLOW)
      */
     static std::unique_ptr<TrafficLightController> create_simple_controller(
-        std::unique_ptr<IDisplayService<StateContext>> display_service,
+        std::unique_ptr<IDisplayService<TrafficContext>> display_service,
         std::unique_ptr<ITimerService> timer_service);
 
   private:

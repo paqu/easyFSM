@@ -6,7 +6,7 @@
 /**
  * @brief ASCII art-based implementation of display service
  */
-class AsciiDisplayService : public IDisplayService<StateContext> {
+class AsciiDisplayService : public IDisplayService<TrafficContext> {
   private:
     // ASCII art components
     std::string create_traffic_light_frame() const;
@@ -26,7 +26,7 @@ class AsciiDisplayService : public IDisplayService<StateContext> {
     bool color_enabled = true;
 
   public:
-    void show_state(const StateContext &ctx) override;
+    void show_state(const TrafficContext &ctx) override;
 
     // Optional: disable colors for terminals that don't support them
     void set_color_enabled(bool enabled);

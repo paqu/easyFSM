@@ -7,7 +7,7 @@
 #include <iostream>
 
 TrafficLightActionHandler::TrafficLightActionHandler(
-    std::unique_ptr<IDisplayService<StateContext>> ds,
+    std::unique_ptr<IDisplayService<TrafficContext>> ds,
     std::unique_ptr<ITimerService> ts)
     : pedestrian_request(false), display_service(std::move(ds)),
       timer_service(std::move(ts)) {
@@ -120,6 +120,6 @@ void TrafficLightActionHandler::set_state_timeout(const TrafficState state,
 }
 
 void TrafficLightActionHandler::configure_state(TrafficState state,
-                                                const StateContext &config) {
+                                                const TrafficContext &config) {
     states[state] = config;
 }

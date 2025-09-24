@@ -14,7 +14,7 @@ const std::string AsciiDisplayService::GRAY_COLOR = "\033[90m";
 const std::string AsciiDisplayService::RESET_COLOR = "\033[0m";
 const std::string AsciiDisplayService::BOLD = "\033[1m";
 
-void AsciiDisplayService::show_state(const StateContext &ctx) {
+void AsciiDisplayService::show_state(const TrafficContext &ctx) {
     std::cout << "\033[2J\033[H"; // Clear screen and move cursor to top
 
     std::cout << create_separator() << std::endl;

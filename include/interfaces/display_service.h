@@ -1,7 +1,5 @@
 #pragma once
 
-struct StateContext;
-
 /**
  * @brief Interface for displaying traffic light state information
  */
