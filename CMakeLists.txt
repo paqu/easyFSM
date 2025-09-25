@@ -118,3 +118,9 @@ if(BUILD_TESTS)
     message(STATUS "Tests enabled but not implemented yet")
 endif()
 
+add_subdirectory(lib)
+target_link_libraries(traffic_light_simulator PRIVATE state_machine_lib)
+
+# Test executable
+add_executable(test_lib test_lib.cpp)
+target_link_libraries(test_lib PRIVATE state_machine_lib)
