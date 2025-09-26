@@ -41,50 +41,10 @@ if(ENABLE_ASAN)
     add_link_options(-fsanitize=address)
 endif()
 
-# Include directories (matching current Makefile structure)
-set(INCLUDE_DIRS
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/include/interfaces
-    ${CMAKE_SOURCE_DIR}/include/models
-    ${CMAKE_SOURCE_DIR}/include/implementations/services
-    ${CMAKE_SOURCE_DIR}/include/implementations/state_machines
-    ${CMAKE_SOURCE_DIR}/include/implementations/transitions
-    ${CMAKE_SOURCE_DIR}/include/implementations/handlers
-    ${CMAKE_SOURCE_DIR}/include/controllers
-    ${CMAKE_SOURCE_DIR}/include/utils
-    ${CMAKE_SOURCE_DIR}/include/factories
-)
 
-# Source files (matching current Makefile subdirectories)
-file(GLOB_RECURSE SOURCES 
-    "${CMAKE_SOURCE_DIR}/src/models/*.cpp"
-    "${CMAKE_SOURCE_DIR}/src/implementations/services/*.cpp"
-    "${CMAKE_SOURCE_DIR}/src/implementations/handlers/*.cpp"
-    "${CMAKE_SOURCE_DIR}/src/controllers/*.cpp"
-    "${CMAKE_SOURCE_DIR}/src/utils/*.cpp"
-    "${CMAKE_SOURCE_DIR}/src/factories/*.cpp"
-    "${CMAKE_SOURCE_DIR}/src/main.cpp"
-)
 
-# Create the executable
-add_executable(traffic_light_simulator ${SOURCES})
 
-# Set target properties
-target_include_directories(traffic_light_simulator PRIVATE ${INCLUDE_DIRS})
-target_link_libraries(traffic_light_simulator PRIVATE Threads::Threads)
 
-# Set output directory (matching current Makefile)
-set_target_properties(traffic_light_simulator PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-)
-
-# Custom targets for convenience (matching current Makefile targets)
-add_custom_target(run
-    COMMAND ${CMAKE_BINARY_DIR}/bin/traffic_light_simulator
-    DEPENDS traffic_light_simulator
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMENT "Running Traffic Light Simulator"
-)
 
 add_custom_target(rebuild
     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target clean
@@ -101,7 +61,7 @@ add_custom_target(debug
 
 # Print build information
 message(STATUS "")
-message(STATUS "=== Traffic Light Simulator Build Configuration ===")
+message(STATUS "=== State Machine Framework Build Configuration ===")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
 message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
@@ -119,7 +79,6 @@ if(BUILD_TESTS)
 endif()
 
 add_subdirectory(lib)
-target_link_libraries(traffic_light_simulator PRIVATE state_machine_lib)
 
 # Test executable
 add_executable(test_lib test_lib.cpp)
@@ -127,3 +86,4 @@ target_link_libraries(test_lib PRIVATE state_machine_lib)
 
 add_subdirectory(examples/traffic_light)
 add_subdirectory(examples/elevator)
+add_subdirectory(examples/traffic_light_threaded)

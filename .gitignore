@@ -8,6 +8,7 @@
 *.so
 *.dll
 *.lib
+*.gz
 
 # Build directories
 /build/
