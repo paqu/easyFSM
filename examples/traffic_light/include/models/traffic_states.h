@@ -1,5 +1,5 @@
 #pragma once
-
+#include "traffic_enum_utils.h"
 #include <iostream>
 /**
  * @brief All possible traffic light states

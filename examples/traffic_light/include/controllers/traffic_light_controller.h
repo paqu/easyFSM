@@ -1,9 +1,10 @@
 #pragma once
-#include "base_controller.h"
+#include <state_machine/state_machine.h>
 
 #include "traffic_events.h"
 #include "traffic_states.h"
 
+using namespace state_machine;
 /**
  * @brief Traffic light specific controller
  */

@@ -1,44 +1,9 @@
-#include "enum_utils.h"
+#include "elevator_enum_utils.h"
 #include "elevator_events.h"
 #include "elevator_states.h"
-#include "traffic_events.h"
-#include "traffic_states.h"
-
-// Traffic light implementations (existing)
-std::string EnumUtils::state_to_string(TrafficState state) {
-    switch (state) {
-    case TrafficState::CAR_GREEN:
-        return "CAR_GREEN";
-    case TrafficState::CAR_YELLOW:
-        return "CAR_YELLOW";
-    case TrafficState::CAR_RED:
-        return "CAR_RED";
-    case TrafficState::WALK_PREP:
-        return "WALK_PREP";
-    case TrafficState::WALK:
-        return "WALK";
-    case TrafficState::WALK_FINISH:
-        return "WALK_FINISH";
-    case TrafficState::CAR_RED_YELLOW:
-        return "CAR_RED_YELLOW";
-    default:
-        return "UNKNOWN_STATE";
-    }
-}
-
-std::string EnumUtils::event_to_string(TrafficEvent event) {
-    switch (event) {
-    case TrafficEvent::TIME_EXPIRED:
-        return "TIME_EXPIRED";
-    case TrafficEvent::BUTTON_PRESSED:
-        return "BUTTON_PRESSED";
-    default:
-        return "UNKNOWN_EVENT";
-    }
-}
 
 // Elevator implementations (new)
-std::string EnumUtils::elevator_state_to_string(ElevatorState state) {
+std::string ElevatorEnumUtils::elevator_state_to_string(ElevatorState state) {
     switch (state) {
     case ElevatorState::IDLE:
         return "IDLE";
@@ -59,7 +24,7 @@ std::string EnumUtils::elevator_state_to_string(ElevatorState state) {
     }
 }
 
-std::string EnumUtils::elevator_event_to_string(ElevatorEvent event) {
+std::string ElevatorEnumUtils::elevator_event_to_string(ElevatorEvent event) {
     switch (event) {
     case ElevatorEvent::FLOOR_REQUESTED:
         return "FLOOR_REQUESTED";

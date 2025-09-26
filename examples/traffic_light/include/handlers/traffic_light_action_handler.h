@@ -1,0 +1,42 @@
+#pragma once
+
+#include <state_machine/state_machine.h>
+#include <state_machine/state_machine.h>
+#include <state_machine/state_machine.h>
+
+#include "traffic_context.h"
+#include "traffic_states.h"
+#include <map>
+#include <memory>
+
+using namespace state_machine;
+
+/**
+ * @brief Action handler specific to traffic light logic
+ */
+class TrafficLightActionHandler
+    : public IActionHandler<TrafficState, TrafficEvent> {
+  private:
+    std::map<TrafficState, TrafficContext> states;
+    bool pedestrian_request = false;
+    std::unique_ptr<IDisplayService<TrafficContext>> display_service;
+    std::unique_ptr<ITimerService> timer_service;
+
+    void display_traffic_state(TrafficState state);
+    void start_state_timer(TrafficState state);
+
+  public:
+    TrafficLightActionHandler(
+        std::unique_ptr<IDisplayService<TrafficContext>> ds,
+        std::unique_ptr<ITimerService> ts);
+
+    // Implementation of IActionHandler interface
+    void handle(TrafficState current_state, TrafficEvent event,
+                TrafficState next_state) override;
+
+    // Traffic light specific methods
+    bool has_pedestrian_request() const;
+    void handle_button_press_event();
+    void set_state_timeout(TrafficState state, uint32_t timeout);
+    void configure_state(TrafficState state, const TrafficContext &config);
+};
