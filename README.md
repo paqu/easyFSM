@@ -1,247 +1,240 @@
-# Traffic Light Simulator
+# State Machine Framework
 [![C++](https://img.shields.io/badge/C%2B%2B-14-blue.svg)]()
+[![CMake](https://img.shields.io/badge/CMake-3.16%2B-blue.svg)]()
+[![License](https://img.shields.io/badge/License-MIT-green.svg)]()
 
-## Description
-A C++ simulation of a traffic light system with pedestrian crossings. The project models traffic light states, state transitions, and pedestrian button requests, providing a flexible framework to handle timers, display services, and customizable state behaviors. It demonstrates modern C++ design patterns, including dependency injection, state machines, and action handlers.
+⭐ **If you find this project useful, please give it a star!** ⭐
 
-**Long-term Goal**: This traffic light simulator serves as a foundation for developing a **generic, reusable state machine framework** that can be applied across various domains including industrial automation, game development, IoT applications, and protocol handling.
+## What is this?
 
-## Features
-- Simulates traffic lights with car and pedestrian signals.  
-- Handles pedestrian button requests and pending states.  
-- Uses a configurable state machine for flexible traffic light behavior.  
-- Supports custom display and timer services.  
-- Modular architecture with separate controllers and action handlers.
+A modern C++ framework for creating **state machine-based simulations**. This library simplifies building complex systems where behavior depends on current state and events - like traffic lights, elevators, game AI, or any system that transitions between different modes.
 
-## Use Case
-This simulator can be used for educational purposes, testing traffic light algorithms, or as a base for more complex traffic management simulations.
+**Goal**: Make it easy to create, configure, and maintain state machine simulations without writing repetitive boilerplate code.
 
-## 🏗️ Architecture
+## Why use it?
 
-### Design Patterns Used
-- **State Machine Pattern**: Runtime configurable state transitions
-- **Factory Pattern**: Traffic light controller creation
-- **Strategy Pattern**: Pluggable display and timer services
-- **Observer Pattern**: Event-driven state changes
-- **Dependency Injection**: Interface-based component integration
+- **Template-based**: Type-safe state and event definitions
+- **Modular design**: Separate state logic, timing, and display concerns
+- **Multiple examples**: Learn from traffic lights, elevators, and threaded implementations
+- **Educational**: Clear code structure for understanding state machine patterns
 
-### Project Structure
+## Project Structure
+
 ```
-├── include/
-│   ├── interfaces/          # Abstract interfaces
-│   ├── models/              # Data structures and enums
-│   ├── controllers/         # Business logic controllers
-│   ├── implementations/     # Concrete implementations
-│   ├── factories/           # Object creation patterns
-│   └── utils/              # Utility classes
-├── src/
-│   ├── controllers/        # Controller implementations
-│   ├── implementations/    # Service implementations
-│   ├── models/            # Model implementations
-│   ├── factories/         # Factory implementations
-│   └── utils/             # Utility implementations
-└── main.cpp               # Application entry point
+├── lib/                          # Core state machine framework
+│   ├── include/state_machine/    # Header-only library
+│   │   ├── core/                 # Base interfaces (IStateMachine, IActionHandler)
+│   │   ├── implementations/      # Concrete classes (RuntimeStateMachine)
+│   │   └── services/             # Support services (Timer, Display)
+│   └── src/                      # Implementation files
+├── examples/                     # Example applications
+│   ├── traffic_light/            # Traffic light simulation
+│   ├── elevator/                 # Elevator control system
+│   └── traffic_light_threaded/   # Multithreaded traffic light
+├── CMakeLists.txt               # Build configuration
+├── Makefile                     # Convenience wrapper
+└── build.sh                    # Build script
 ```
 
-## 🚀 Getting Started
+## How to Run
 
 ### Prerequisites
-- **C++14** compatible compiler (GCC 5.4+ or Clang 3.8+)
-- **Make** build system
-- **pthread** library (typically included with GCC/Clang)
-- ANSI terminal for colored ASCII display (optional)
+- C++14 compatible compiler (GCC 5.4+ or Clang 3.8+)
+- CMake 3.16+
+- pthread library
 
-### Installation
+### Quick Start
+```bash
+# Build everything
+make all
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd traffic-light-simulator
-   ```
-
-2. **Build the project**
-   ```bash
-   make all
-   ```
-
-3. **Run the simulator**
-   ```bash
-   make run
-   ```
+# Run examples
+make run                          # Traffic light simulation
+./build/examples/elevator/elevator_example
+./build/examples/traffic_light_threaded/traffic_light_threaded
+```
 
 ### Build Options
 
+| Command | Description |
+|---------|-------------|
+| `make all` | Standard build (Release mode) |
+| `make debug` | Debug build with symbols |
+| `make clean` | Remove build files |
+| `make rebuild` | Clean + build from scratch |
+| `make run` | Build + run main traffic light example |
+| `make test` | Build + run tests |
+| `make asan` | Build with AddressSanitizer for memory debugging |
+| `make help` | Show all available targets |
+
+### Advanced Build Options
 ```bash
-# Standard build
-make all
-
-# Debug build with symbols
-make debug
-
-# Clean build files
-make clean
-
-# Complete clean (removes directories)
-make distclean
-
-# Rebuild from scratch
-make rebuild
-
-# Show help
-make help
+./build.sh --help               # Show all options
+./build.sh --debug --clean      # Debug build from scratch
+./build.sh --asan --tests       # AddressSanitizer + tests
+./build.sh --run               # Build and run
 ```
 
-## 🎮 Usage
+## Examples
 
-### Running the Simulator
+### 1. Traffic Light (`examples/traffic_light/`)
 
-When you start the application, you'll be prompted to choose a mode:
+**Features:**
+- Standard (European) vs Simple (American) traffic patterns
+- Pedestrian crossing with button requests
+- ASCII art visualization
+- Configurable state timing
 
-1. **Demo Mode**: Demonstrates both Standard and Simple traffic light types with automated transitions
-2. **Simulation Mode**: Interactive real-time simulation with user controls
-
-### Interactive Controls (Simulation Mode)
-- **Any key**: Press pedestrian crossing button
-- **'q'**: Quit the simulation
-
-### Traffic Light Types
-
-#### Standard Traffic Light
-Includes all states: `GREEN → YELLOW → RED → RED_YELLOW → GREEN`
-- Features the European-style RED+YELLOW preparation phase
-- Full pedestrian crossing cycle when requested
-
-#### Simple Traffic Light
-Simplified cycle: `GREEN → YELLOW → RED → GREEN`
-- No RED_YELLOW state (American-style)
-- Extended yellow duration to compensate
-- Streamlined pedestrian integration
-
-### Creating Custom Controllers
-
-You can create custom traffic light controllers using the factory or by manually configuring components:
-
-#### Using the Factory (Recommended)
-```cpp
-#include "traffic_light_factory.h"
-#include "ascii_display_service.h"
-#include "function_timer_service.h"
-
-// Create a timer service with custom callback
-auto timer_service = std::make_unique<FunctionTimerService>([](uint32_t duration) {
-    std::cout << "Starting " << duration << "s timer\n";
-    // Your timer implementation here
-});
-
-// Create display service
-auto display_service = std::make_unique<AsciiDisplayService>();
-
-// Create controller using factory
-auto controller = TrafficLightFactory::create_controller(
-    TrafficLightType::STANDARD,  // or TrafficLightType::SIMPLE
-    std::move(display_service),
-    std::move(timer_service)
-);
-
-// Use the controller
-controller->timeout_expired();  // Trigger state transition
-controller->button_pressed();   // Pedestrian button press
+**Run:**
+```bash
+./build/examples/traffic_light/traffic_light_example
 ```
 
-#### Manual Configuration
-```cpp
-#include "runtime_state_machine.h"
-#include "traffic_light_action_handler.h"
-#include "traffic_light_controller.h"
-#include "simple_state_transition.h"
+**Key states:** `CAR_GREEN`, `CAR_YELLOW`, `CAR_RED`, `WALK`, `WALK_PREP`, `WALK_FINISH`, `CAR_RED_YELLOW`
 
-// Create state machine
-auto state_machine = std::make_shared<RuntimeStateMachine>(TrafficState::CAR_GREEN);
+### 2. Elevator (`examples/elevator/`)
 
-// Create action handler with services
-auto action_handler = std::make_shared<TrafficLightActionHandler>(
-    std::make_unique<ConsoleDisplayService>(),
-    std::make_unique<FunctionTimerService>([](uint32_t duration) {
-        // Custom timer logic
-    })
-);
+**Features:**
+- Multi-floor navigation (configurable min/max floors)
+- Door control with opening/closing/obstacle detection
+- Emergency stop functionality
+- Floor request queue management
 
-// Configure transitions
-state_machine->add_transition(std::make_unique<SimpleStateTransition>(
-    TrafficState::CAR_GREEN, 
-    TrafficEvent::TIME_EXPIRED, 
-    TrafficState::CAR_YELLOW
-));
-
-// Create controller
-auto controller = std::make_unique<TrafficLightController>(
-    state_machine, 
-    action_handler
-);
+**Run:**
+```bash
+./build/examples/elevator/elevator_example
 ```
 
-### Custom Display Services
-Implement the `IDisplayService` interface to create custom visualizations:
+**Key states:** `IDLE`, `DOORS_OPENING`, `DOORS_OPEN`, `DOORS_CLOSING`, `MOVING_UP`, `MOVING_DOWN`, `EMERGENCY_STOP`
+
+### 3. Threaded Traffic Light (`examples/traffic_light_threaded/`)
+
+**Features:**
+- Real-time simulation with user input
+- Modern C++17 threading (replacing legacy pthread)
+- Interactive pedestrian button simulation
+- Clean shutdown handling
+
+**Run:**
+```bash
+./build/examples/traffic_light_threaded/traffic_light_threaded
+```
+
+**Controls:** Any key = pedestrian button, 'q' = quit
+
+## How to Add Your Own Example
+
+### 1. Create Directory Structure
+```bash
+mkdir -p examples/my_system/{src,include}
+```
+
+### 2. Define Your Domain Types
 ```cpp
-class CustomDisplayService : public IDisplayService {
+// include/my_states.h
+enum class MyState { IDLE, WORKING, ERROR };
+enum class MyEvent { START, COMPLETE, FAIL };
+```
+
+### 3. Create Action Handler
+```cpp
+// include/my_action_handler.h
+#include <state_machine/state_machine.h>
+
+class MyActionHandler : public IActionHandler<MyState, MyEvent> {
 public:
-    void show_state(const StateContext &ctx) override {
-        // Custom visualization logic
-        std::cout << "Custom: " << ctx.name 
-                  << " for " << ctx.duration << "s\n";
-    }
-    
-    void show_button_state(bool is_new_request) override {
-        std::cout << (is_new_request ? "Button pressed!" : "Waiting...") << "\n";
+    void handle(MyState current, MyEvent event, MyState next) override {
+        std::cout << "Transition: " << current << " -> " << next << std::endl;
+        // Add your custom logic here
     }
 };
 ```
 
-### Custom Timer Services
-Create custom timer implementations by implementing `ITimerService`:
+### 4. Create Controller
 ```cpp
-class CustomTimerService : public ITimerService {
-private:
-    std::function<void()> callback;
-    
+// include/my_controller.h
+class MyController : public BaseController<MyState, MyEvent> {
 public:
-    CustomTimerService(std::function<void()> cb) : callback(cb) {}
-    
-    void start_timeout(uint32_t duration_sec) override {
-        // Your timer implementation (could use std::thread, signals, etc.)
-        std::thread([this, duration_sec]() {
-            std::this_thread::sleep_for(std::chrono::seconds(duration_sec));
-            if (callback) callback();
-        }).detach();
+    MyController(/* dependencies */);
+    void start_work() { handle_event(MyEvent::START); }
+    void complete_work() { handle_event(MyEvent::COMPLETE); }
+    void report_error() { handle_event(MyEvent::FAIL); }
+};
+```
+
+### 5. Setup CMakeLists.txt
+```cmake
+# examples/my_system/CMakeLists.txt
+add_executable(my_system_example
+    src/my_controller.cpp
+    src/my_action_handler.cpp
+    main.cpp
+)
+
+target_include_directories(my_system_example PRIVATE include)
+target_link_libraries(my_system_example PRIVATE state_machine_lib)
+```
+
+### 6. Add to Root CMakeLists.txt
+```cmake
+# Add this line to main CMakeLists.txt
+add_subdirectory(examples/my_system)
+```
+
+### 7. Create Factory (Optional but Recommended)
+```cpp
+// include/my_factory.h
+class MyFactory {
+public:
+    static std::unique_ptr<MyController> create_controller() {
+        auto sm = std::make_shared<RuntimeStateMachine<MyState, MyEvent>>(MyState::IDLE);
+        
+        // Add transitions
+        sm->add_transition(std::make_unique<SimpleStateTransition<MyState, MyEvent>>(
+            MyState::IDLE, MyEvent::START, MyState::WORKING
+        ));
+        
+        auto handler = std::make_shared<MyActionHandler>();
+        return std::make_unique<MyController>(sm, handler);
     }
 };
 ```
 
-## 🐛 Known Issues
+Look at existing examples for complete implementation patterns!
 
-### Current Limitations
-1. **Terminal Dependencies**: ASCII display requires ANSI-compatible terminal
-2. **Platform-Specific**: pthread implementation limits portability to POSIX systems
-3. **Input Buffering**: Console input may be buffered on some systems
-4. **Memory Management**: Some raw pointer usage in callback functions
+## Future Goals
 
-## 🤝 Contributing
+### Short Term
+- **Unit Testing Framework**: Comprehensive test suite with Google Test integration
+- **Observer Pattern**: Decouple state change notifications from action handlers to reduce tight coupling between components
 
-### Development Setup
+### Medium Term  
+- **Runtime State/Event Creation**: Dynamic addition of new states and events without recompilation
+- **DSL for Basic Structures**: Domain-specific language for generating common state machine patterns
+
+### Long Term
+- **Graphical State Machine Designer**: Visual tool for creating and editing state graphs and event flows
+- **State Machine Validation**: Automatic detection of unreachable states and dead transitions
+- **Performance Profiling**: Built-in metrics and timing analysis
+
+## Contributing
+
+We welcome contributions! Please:
+
 1. Fork the repository
-2. Create a feature branch
-3. Follow the existing code style
-4. Add appropriate documentation
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Follow existing code style and patterns
+4. Add tests for new functionality
+5. Update documentation
+6. Submit a pull request
 
 ### Code Style Guidelines
-- Use meaningful variable and function names
-- Follow RAII principles
-- Prefer const correctness
-- Document public interfaces
-- Use smart pointers for dynamic allocation
+- Use `snake_case` for variables and functions
+- Use `PascalCase` for types and classes
+- Follow RAII principles with smart pointers
+- Document public interfaces with Doxygen-style comments
 
-## 📄 License
+## License
 
 **MIT License**
 
@@ -264,4 +257,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+⭐ **Found this helpful? Please star the repository to support the project!** ⭐
 
