@@ -3,8 +3,10 @@
 // Core interfaces
 #include "core/action_handler.h"
 #include "core/base_controller.h"
+#include "core/observable_controller.h"
 #include "core/state_machine.h"
 #include "core/state_transition.h"
+#include "core/subject.h"
 
 // Implementations
 #include "implementations/conditional_state_transition.h"
