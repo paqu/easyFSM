@@ -17,20 +17,22 @@ A modern C++ framework for creating **state machine-based simulations**. This li
 - **Modular design**: Separate state logic, timing, and display concerns
 - **Multiple examples**: Learn from traffic lights, elevators, and threaded implementations
 - **Educational**: Clear code structure for understanding state machine patterns
+- **Flexible Architecture**: Choose between traditional Action Handler or modern Observer Pattern
 
 ## Project Structure
 
 ```
 ├── lib/                          # Core state machine framework
 │   ├── include/state_machine/    # Header-only library
-│   │   ├── core/                 # Base interfaces (IStateMachine, IActionHandler)
+│   │   ├── core/                 # Base interfaces (IStateMachine, IActionHandler, IObserver)
 │   │   ├── implementations/      # Concrete classes (RuntimeStateMachine)
 │   │   └── services/             # Support services (Timer, Display)
 │   └── src/                      # Implementation files
 ├── examples/                     # Example applications
-│   ├── traffic_light/            # Traffic light simulation
+│   ├── traffic_light/            # Traffic light simulation (traditional)
 │   ├── elevator/                 # Elevator control system
-│   └── traffic_light_threaded/   # Multithreaded traffic light
+│   ├── traffic_light_threaded/   # Multithreaded traffic light
+│   └── traffic_light_observer/   # Observer pattern demonstration
 ├── CMakeLists.txt               # Build configuration
 ├── Makefile                     # Convenience wrapper
 └── build.sh                    # Build script
@@ -52,6 +54,7 @@ make all
 make run                          # Traffic light simulation
 ./build/examples/elevator/elevator_example
 ./build/examples/traffic_light_threaded/traffic_light_threaded
+./build/examples/traffic_light_observer/traffic_light_observer_example
 ```
 
 ### Build Options
@@ -121,6 +124,135 @@ make run                          # Traffic light simulation
 ```
 
 **Controls:** Any key = pedestrian button, 'q' = quit
+
+### 4. Observer Pattern Traffic Light (`examples/traffic_light_observer/`)
+
+**Features:**
+- Demonstrates Observer Pattern implementation
+- Multiple independent observers (console logger, file logger, display, timer, pedestrian)
+- Decoupled architecture - observers don't depend on each other
+- Real-time state transition monitoring with timestamps
+- Automatic timing analysis
+
+**Run:**
+```bash
+./build/examples/traffic_light_observer/traffic_light_observer_example
+```
+
+**Key concept:** Instead of a monolithic action handler, the system notifies multiple observers about state changes, allowing independent components to react to state transitions.
+
+## Architecture Patterns
+
+The framework supports two architectural approaches for handling state transitions:
+
+### 1. Traditional Action Handler Pattern (`BaseController`)
+
+**When to use:**
+- Simple, straightforward state machines
+- Single responsibility for state changes
+- Direct coupling between controller and actions is acceptable
+
+**Example:** `examples/traffic_light/` and `examples/elevator/`
+
+```cpp
+// 1. Create action handler
+class MyActionHandler : public IActionHandler<MyState, MyEvent> {
+    void handle(MyState current, MyEvent event, MyState next) override {
+        // Handle transition: update display, start timers, log, etc.
+    }
+};
+
+// 2. Create controller
+class MyController : public BaseController<MyState, MyEvent> {
+public:
+    MyController(std::shared_ptr<IStateMachine<MyState, MyEvent>> sm,
+                 std::shared_ptr<IActionHandler<MyState, MyEvent>> ah)
+        : BaseController(sm, ah) {}
+    
+    void trigger_event() { handle_event(MyEvent::SOMETHING); }
+};
+```
+
+**Pros:**
+- Simple and straightforward
+- All logic in one place
+- Easy to understand for small systems
+
+**Cons:**
+- Tight coupling between components
+- Hard to test individual concerns
+- Difficult to add/remove features
+
+### 2. Observer Pattern (`ObservableController`)
+
+**When to use:**
+- Multiple independent components need to react to state changes
+- You want to separate concerns (logging, display, timing, business logic)
+- System needs to be extensible without modifying core code
+- Testing individual components in isolation is important
+
+**Example:** `examples/traffic_light_observer/`
+
+```cpp
+// 1. Create observers for different concerns
+class LoggerObserver : public IObserver<MyState, MyEvent> {
+    void on_state_transition(MyState from, MyEvent event, MyState to) override {
+        log("Transition: " + from + " -> " + to);
+    }
+};
+
+class DisplayObserver : public IObserver<MyState, MyEvent> {
+    void on_state_transition(MyState from, MyEvent event, MyState to) override {
+        update_display(to);
+    }
+};
+
+class TimerObserver : public IObserver<MyState, MyEvent> {
+    void on_state_transition(MyState from, MyEvent event, MyState to) override {
+        start_timer_for_state(to);
+    }
+};
+
+// 2. Create observable controller
+class MyController : public ObservableController<MyState, MyEvent> {
+public:
+    explicit MyController(std::shared_ptr<IStateMachine<MyState, MyEvent>> sm)
+        : ObservableController(sm) {}
+    
+    void trigger_event() { handle_event(MyEvent::SOMETHING); }
+};
+
+// 3. Attach observers
+auto controller = std::make_unique<MyController>(state_machine);
+controller->add_observer(std::make_shared<LoggerObserver>());
+controller->add_observer(std::make_shared<DisplayObserver>());
+controller->add_observer(std::make_shared<TimerObserver>());
+```
+
+**Pros:**
+- Loose coupling - observers are independent
+- Easy to add/remove features (just attach/detach observers)
+- Each observer has single responsibility
+- Easy to test components in isolation
+- Can add new observers without modifying existing code
+
+**Cons:**
+- More files and classes to manage
+- Slightly more complex setup
+- May be overkill for very simple systems
+
+### Choosing Between Patterns
+
+| Criteria | Action Handler | Observer Pattern |
+|----------|---------------|------------------|
+| System Complexity | Simple | Complex |
+| Number of Concerns | 1-2 | 3+ |
+| Testability Needs | Low | High |
+| Future Extensibility | Low | High |
+| Team Size | Small | Medium-Large |
+| Code Organization | Centralized | Distributed |
+
+**Rule of thumb:** Start with Action Handler for prototypes and simple systems. Migrate to Observer Pattern when you find yourself adding multiple responsibilities to your action handler or when you need better testability.
 
 ## How to Add Your Own Example
 
@@ -206,11 +338,12 @@ Look at existing examples for complete implementation patterns!
 
 ### Short Term
 - **Unit Testing Framework**: Comprehensive test suite with Google Test integration
-- **Observer Pattern**: Decouple state change notifications from action handlers to reduce tight coupling between components
+- ~~**Observer Pattern**: Decouple state change notifications from action handlers~~ ✅ **COMPLETED** - See `examples/traffic_light_observer/`
 
 ### Medium Term  
 - **Runtime State/Event Creation**: Dynamic addition of new states and events without recompilation
 - **DSL for Basic Structures**: Domain-specific language for generating common state machine patterns
+- **Enhanced Observer Features**: Support for observer priorities and filtering
 
 ### Long Term
 - **Graphical State Machine Designer**: Visual tool for creating and editing state graphs and event flows
@@ -261,4 +394,3 @@ SOFTWARE.
 ---
 
 ⭐ **Found this helpful? Please star the repository to support the project!** ⭐
-
