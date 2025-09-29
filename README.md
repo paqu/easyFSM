@@ -1,4 +1,4 @@
-# State Machine Framework
+# easyFSM - State Machine Framework
 [![C++](https://img.shields.io/badge/C%2B%2B-14-blue.svg)]()
 [![CMake](https://img.shields.io/badge/CMake-3.16%2B-blue.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
