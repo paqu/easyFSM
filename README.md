@@ -20,7 +20,7 @@ A modern C++ framework for creating **state machine-based simulations**. This li
 - **Flexible Architecture**: Choose between traditional Action Handler or modern Observer Pattern
 
 ## Demo
-![Demo](./assets/demo.mov)
+https://github.com/user-attachments/assets/c113a6b0-ac5c-4ee3-a734-dab524a813ad
 
 ## Project Structure
 
