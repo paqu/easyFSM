@@ -19,6 +19,9 @@ A modern C++ framework for creating **state machine-based simulations**. This li
 - **Educational**: Clear code structure for understanding state machine patterns
 - **Flexible Architecture**: Choose between traditional Action Handler or modern Observer Pattern
 
+## Demo
+![Demo](./assets/demo.mov)
+
 ## Project Structure
 
 ```
