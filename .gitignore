@@ -12,6 +12,7 @@
 
 # Build directories
 /build/
+web/
 bin/
 dist/
 Debug/

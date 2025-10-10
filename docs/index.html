@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>easyFSM - Traffic Light Simulator (WebAssembly)</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>🚦 easyFSM Traffic Light Simulator</h1>
+        <p>State Machine Framework compiled to WebAssembly</p>
+        <a href="https://github.com/yourusername/easyFSM" target="_blank">
+          View on GitHub
+        </a>
+      </header>
+
+      <main>
+        <div class="traffic-light">
+          <div class="light red" id="red-light"></div>
+          <div class="light yellow" id="yellow-light"></div>
+          <div class="light green" id="green-light"></div>
+        </div>
+
+        <div class="pedestrian-signals">
+          <div class="ped-signal">
+            <div class="ped-light red-ped" id="ped-red"></div>
+            <span>DON'T WALK</span>
+          </div>
+          <div class="ped-signal">
+            <div class="ped-light green-ped" id="ped-green"></div>
+            <span>WALK</span>
+          </div>
+        </div>
+
+        <div class="info-panel">
+          <div class="state-display">
+            Current State: <span id="current-state">CAR_GREEN</span>
+          </div>
+          <div class="timer-display">
+            Time Remaining: <span id="timer">10</span>s
+          </div>
+          <div class="request-display">
+            Pedestrian Request: <span id="ped-request">No</span>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button id="start-btn" class="btn btn-primary">
+            Start Simulation
+          </button>
+          <button id="stop-btn" class="btn btn-secondary" disabled>
+            Stop Simulation
+          </button>
+          <button id="ped-btn" class="btn btn-pedestrian">
+            🚶 Pedestrian Button
+          </button>
+          <button id="step-btn" class="btn btn-step">⏭️ Step</button>
+        </div>
+
+        <div class="stats">
+          <h3>Statistics</h3>
+          <div class="stat-item">
+            <span>Total Transitions:</span>
+            <span id="total-transitions">0</span>
+          </div>
+          <div class="stat-item">
+            <span>Pedestrian Crossings:</span>
+            <span id="ped-crossings">0</span>
+          </div>
+        </div>
+      </main>
+
+      <footer>
+        <p>Built with easyFSM Framework | Powered by WebAssembly</p>
+      </footer>
+    </div>
+
+    <script src="traffic_light_wasm.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
