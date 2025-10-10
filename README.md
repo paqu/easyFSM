@@ -21,12 +21,12 @@ A modern C++ framework for creating **state machine-based simulations**. This li
 - **Flexible Architecture**: Choose between traditional Action Handler or modern Observer Pattern
 
 ## Demo
+[Live Demo](https://paqu.github.io/easyFSM/) - Traffic light simulator compiled to WebAssembly - runs in your browser!
+
+Below terminal version
 
 https://github.com/user-attachments/assets/c113a6b0-ac5c-4ee3-a734-dab524a813ad
 
-## [Live Demo](https://TWOJ-USERNAME.github.io/easyFSM/)
-
-Traffic light simulator compiled to WebAssembly - runs in your browser!
 
 ## Project Structure
 
